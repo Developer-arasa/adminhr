@@ -12,31 +12,36 @@
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
     
     :root { 
-      --bg-body: #f7f9fc; 
-      --card-bg: #ffffff; 
-      --primary-red: #e63946; 
-      --primary-dark: #c1121f; 
-      --text-main: #2b2d42; 
-      --text-muted: #8d99ae; 
-      --border-color: #edf2f7; 
+      /* PREMIUM DARK NEON THEME */
+      --bg-body: #09090b; /* Latar belakang hitam legam */
+      --card-bg: #18181b; /* Warna kartu abu-abu sangat gelap */
+      --primary-accent: #10b981; /* Hijau neon ala gambar referensi */
+      --primary-dark: #059669;
+      --text-main: #f8fafc; /* Teks utama putih */
+      --text-muted: #94a3b8; /* Teks sekunder abu-abu */
+      --border-color: #27272a; /* Garis pembatas tipis */
       --btn-approve: #10b981; 
       --btn-reject: #ef4444; 
     }
     
     body { font-family: 'Poppins', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; display: flex; justify-content: center; min-height: 100vh; }
     .app-wrapper { width: 100%; max-width: 1200px; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; }
-    .panel { background: var(--card-bg); border-radius: 20px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+    
+    .panel { background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    
     .brand-area { text-align: center; margin-bottom: 20px; }
-    .brand-area h1 { margin: 0; font-size: 26px; font-weight: 800; color: var(--primary-red); }
+    .brand-area h1 { margin: 0; font-size: 26px; font-weight: 800; color: var(--primary-accent); text-transform: uppercase; letter-spacing: 1px;}
     .brand-area p { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
     
+    /* NAVIGASI UTAMA */
     .nav-scroll-container { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: none; }
     .nav-scroll-container::-webkit-scrollbar { display: none; }
-    .nav-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; background: #f1f5f9; color: var(--text-muted); text-align: center; white-space: nowrap; border: none; transition: 0.3s;}
-    .nav-btn.active, .nav-btn:hover { background: var(--primary-red); color: white; }
+    .nav-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; background: #27272a; color: var(--text-muted); text-align: center; white-space: nowrap; border: 1px solid transparent; transition: 0.3s;}
+    .nav-btn.active, .nav-btn:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary-accent); border-color: var(--primary-accent); }
     
-    .sub-nav-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-muted); text-align: center; border: 1px solid transparent; transition: 0.3s; }
-    .sub-nav-btn.active { background: #fff5f5; border: 1px solid #fed7d7; color: var(--primary-red); }
+    /* NAVIGASI SUB TAB */
+    .sub-nav-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-muted); text-align: center; border: 1px solid var(--border-color); transition: 0.3s; }
+    .sub-nav-btn.active { background: rgba(16, 185, 129, 0.1); border-color: var(--primary-accent); color: var(--primary-accent); }
     
     .view-section { display: none; animation: fadeIn 0.3s ease;}
     .view-section.active { display: block; }
@@ -45,45 +50,63 @@
     .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
     @media (min-width: 768px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
     
-    .stat-card { text-align: center; padding: 20px; border-radius: 16px; background: #fff5f5; border: 1px solid #fed7d7; }
-    .stat-val { font-size: 32px; font-weight: 800; color: var(--primary-red); margin: 5px 0;}
+    /* CARD STATS */
+    .stat-card { text-align: center; padding: 20px; border-radius: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); }
+    .stat-val { font-size: 36px; font-weight: 800; color: var(--primary-accent); margin: 5px 0; text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);}
     
-    .req-card { background: white; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-    .req-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px; align-items:center;}
+    /* CARD DATA */
+    .req-card { background: #121214; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
+    .req-card:hover { border-color: #3f3f46; }
+    .req-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; align-items:center;}
     .req-title { font-size: 14px; font-weight: 700; color: var(--text-main); }
-    .req-body { font-size: 12px; color: #4a5568; line-height: 1.5; margin-bottom: 15px; }
+    .req-body { font-size: 12px; color: #a1a1aa; line-height: 1.5; margin-bottom: 15px; }
     
-    .status-badge { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; }
-    .DISETUJUI, .IZIN_DIBERIKAN { background: #d1fae5; color: #047857; }
-    .DITOLAK, .IZIN_TIDAK_DIBERIKAN { background: #fee2e2; color: #b91c1c; }
-    .PENDING { background: #fef3c7; color: #b45309; }
+    /* STATUS BADGE GLOWING EFFECT */
+    .status-badge { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;}
+    .DISETUJUI, .IZIN_DIBERIKAN { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .DITOLAK, .IZIN_TIDAK_DIBERIKAN { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .PENDING { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
     
-    .btn-red { background: var(--primary-red); color: white; width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-family: 'Poppins'; transition: 0.2s;}
-    .btn-red:hover { background: var(--primary-dark); }
-    .btn-outline { background: white; color: var(--primary-red); border: 2px solid var(--primary-red); width: 100%; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-family: 'Poppins'; transition: 0.2s;}
-    .btn-outline:hover { background: #fff5f5; }
+    /* BUTTONS */
+    .btn-primary { background: var(--primary-accent); color: #000; width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-family: 'Poppins'; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);}
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px);}
+    .btn-outline { background: transparent; color: var(--primary-accent); border: 1px solid var(--primary-accent); width: 100%; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-family: 'Poppins'; transition: 0.2s;}
+    .btn-outline:hover { background: rgba(16, 185, 129, 0.1); }
     
+    /* ACTION ICONS */
+    .btn-icon { background: #27272a; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; color: #fff; transition: 0.2s; font-weight: 700;}
+    .btn-icon:hover { background: #3f3f46; }
+    .btn-icon-del { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);}
+    .btn-icon-del:hover { background: #ef4444; color: #fff; }
+    .action-group { display: flex; gap: 8px; align-items: center; justify-content: flex-end; border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px; }
+
+    /* KALENDER DARK */
     .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .calendar-controls button { background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; color: var(--primary-red); }
+    .calendar-controls button { background: #27272a; border: 1px solid #3f3f46; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; color: var(--text-main); }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-    .cal-day { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 4px; text-align: center; min-height: 55px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: 0.2s;}
-    .cal-day.has-data:hover { border-color: var(--primary-red); transform: scale(1.05); cursor: pointer;}
+    .cal-day { background: #121214; border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 4px; text-align: center; min-height: 55px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: 0.2s;}
+    .cal-day.has-data:hover { border-color: var(--primary-accent); transform: scale(1.05); cursor: pointer;}
     .cal-badge { font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 6px; margin-top: 4px; }
-    .cal-badge.zero { background: #edf2f7; color: var(--text-muted); }
-    .cal-badge.red { background: var(--primary-red); color: white; }
+    .cal-badge.zero { background: transparent; color: transparent; }
+    .cal-badge.red { background: var(--primary-accent); color: #000; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);}
     
-    .acc-item { background: white; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border-color); overflow: hidden; }
-    .acc-header { padding: 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-    .acc-body { display: none; padding: 15px; border-top: 1px dashed #eee; }
-    .acc-row { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 0; border-bottom: 1px solid #f9f9f9; align-items: center;}
+    /* ACCORDION DARK */
+    .acc-item { background: #121214; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border-color); overflow: hidden; }
+    .acc-header { padding: 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-main);}
+    .acc-badge { font-size:11px; background: rgba(16, 185, 129, 0.1); color: var(--primary-accent); padding: 4px 8px; border-radius: 6px; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.2);}
+    .acc-body { display: none; padding: 15px; border-top: 1px dashed var(--border-color); }
+    .acc-row { display: flex; justify-content: space-between; font-size: 12px; padding: 10px 0; border-bottom: 1px solid #1f1f22; align-items: center;}
     .acc-row:last-child { border-bottom: none; padding-bottom: 0; }
     
-    input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; box-sizing: border-box; background: #f8fafc; margin-bottom: 15px; outline: none; font-family: 'Poppins'; font-weight: 600; }
-    input:focus, select:focus { border-color: var(--primary-red); }
+    /* INPUT DARK */
+    input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; box-sizing: border-box; background: #09090b; color: #fff; margin-bottom: 15px; outline: none; font-family: 'Poppins'; font-weight: 600; }
+    input:focus, select:focus { border-color: var(--primary-accent); }
     
-    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
-    .modal-box { background: white; width: 90%; max-width: 380px; border-radius: 24px; padding: 25px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: left; max-height: 80vh; overflow-y: auto;}
+    /* MODAL DARK */
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; }
+    .modal-box { background: var(--card-bg); width: 90%; max-width: 380px; border-radius: 24px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: left; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color);}
     .btn-pop { padding: 12px 20px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; min-width: 100px; font-family: 'Poppins'; transition: 0.2s;}
+    
     .filter-group { display: flex; gap: 10px; }
   </style>
 </head>
@@ -119,7 +142,7 @@
     </div>
     <div id="apI"><div id="boxAppIzin"></div></div>
     <div id="apL" style="display:none;">
-      <button class="btn-red" onclick="bulkApproveLembur()">SIKAT SEMUA (APPROVE ALL)</button>
+      <button class="btn-primary" onclick="bulkApproveLembur()">SIKAT SEMUA (APPROVE ALL)</button>
       <div id="boxAppLembur"></div>
     </div>
   </div>
@@ -180,7 +203,7 @@
   </div>
 
   <div id="vKar" class="view-section panel">
-    <button class="btn-red" onclick="openKarModal('ADD')">+ TAMBAH KARYAWAN</button>
+    <button class="btn-primary" onclick="openKarModal('ADD')">+ TAMBAH KARYAWAN</button>
     <div id="boxListKaryawan"></div>
   </div>
 
@@ -188,43 +211,42 @@
 
 <div id="popupOverlay" class="modal-overlay">
   <div class="modal-box" style="text-align:center;">
-    <h3 id="popTitle" style="color:var(--primary-red); margin-top:0;">Notifikasi</h3>
-    <p id="popMsg" style="font-size:13px; margin-bottom:20px; color:var(--text-main);"></p>
+    <h3 id="popTitle" style="color:var(--text-main); margin-top:0;">Notifikasi</h3>
+    <p id="popMsg" style="font-size:13px; margin-bottom:20px; color:var(--text-muted);"></p>
     <div id="popBtns" style="display:flex; gap:10px; justify-content:center;"></div>
   </div>
 </div>
 
 <div id="actModal" class="modal-overlay">
   <div class="modal-box">
-    <h3 style="color:var(--primary-red); margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Kelola Data</h3>
+    <h3 style="color:var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:10px;">⚙️ Kelola Data</h3>
     <p id="actDesc" style="font-size:12px; color:var(--text-muted);"></p>
-    <label style="font-size:11px; font-weight:700; color:var(--text-main);">Ubah Status:</label>
+    <label style="font-size:11px; font-weight:700; color:var(--text-main);">Ubah Status (Jika Salah):</label>
     <select id="actStatus" style="width:100%; margin-bottom:20px;"></select>
     <div style="display:flex; gap:10px;">
-      <button class="btn-pop" style="background:var(--btn-approve); color:white; flex:1;" onclick="saveAct()">Simpan</button>
-      <button class="btn-pop" style="background:var(--btn-reject); color:white; flex:1;" onclick="deleteAct()">Hapus</button>
+      <button class="btn-pop" style="background:var(--btn-approve); color:#000; flex:1;" onclick="saveAct()">Simpan</button>
+      <button class="btn-pop" style="background:var(--border-color); color:var(--text-main); flex:1;" onclick="closeModal('actModal')">Batal</button>
     </div>
-    <button class="btn-pop" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--text-main);" onclick="closeModal('actModal')">Batal</button>
   </div>
 </div>
 
 <div id="karModal" class="modal-overlay">
   <div class="modal-box">
-    <h3 id="karTitle" style="color:var(--primary-red); margin-top:0;">Form Karyawan</h3>
+    <h3 id="karTitle" style="color:var(--text-main); margin-top:0;">Form Karyawan</h3>
     <input type="text" id="kId" placeholder="ID Karyawan">
     <input type="text" id="kNm" placeholder="Nama Lengkap">
     <div style="display:flex; gap:10px; margin-top:10px;">
-      <button class="btn-pop" style="background:#f1f5f9; flex:1;" onclick="closeModal('karModal')">Batal</button>
-      <button class="btn-pop" style="background:var(--primary-red); color:white; flex:1;" onclick="saveKar()">Simpan</button>
+      <button class="btn-pop" style="background:var(--border-color); color:var(--text-main); flex:1;" onclick="closeModal('karModal')">Batal</button>
+      <button class="btn-pop" style="background:var(--primary-accent); color:#000; flex:1;" onclick="saveKar()">Simpan</button>
     </div>
   </div>
 </div>
 
 <div id="kalenderModal" class="modal-overlay">
   <div class="modal-box">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
       <h3 id="kalenderModalTitle" style="margin:0; font-size: 15px; color:var(--text-main);">Daftar Lembur</h3>
-      <button onclick="closeModal('kalenderModal')" style="padding: 6px 12px; border-radius: 8px; background: #eee; color: var(--text-main); font-size: 11px; font-weight:700; border:none; cursor:pointer;">Tutup</button>
+      <button onclick="closeModal('kalenderModal')" style="padding: 6px 12px; border-radius: 8px; background: var(--border-color); color: var(--text-main); font-size: 11px; font-weight:700; border:none; cursor:pointer;">Tutup</button>
     </div>
     <div id="kalenderModalContent"></div>
   </div>
@@ -247,7 +269,7 @@
 
   // --- PENERJEMAH BAHASA MANUSIA UNTUK JAM ---
   function formatTeksJam(val) {
-    if(!val) return "0 Menit";
+    if(!val || val == 0) return "0 Menit";
     let totalMenit = Math.round(parseFloat(val) * 60);
     let j = Math.floor(totalMenit / 60);
     let m = totalMenit % 60;
@@ -262,7 +284,7 @@
     const ov = document.getElementById('popupOverlay'); 
     document.getElementById('popTitle').innerText = "Notifikasi";
     document.getElementById('popMsg').innerText = msg;
-    document.getElementById('popBtns').innerHTML = `<button class="btn-pop" style="background:var(--primary-red); color:white;" onclick="closePop()">OK</button>`;
+    document.getElementById('popBtns').innerHTML = `<button class="btn-pop" style="background:var(--primary-accent); color:#000;" onclick="closePop()">OK</button>`;
     ov.style.display = 'flex'; setTimeout(() => ov.style.opacity = '1', 10);
   }
 
@@ -270,7 +292,7 @@
     const ov = document.getElementById('popupOverlay'); 
     document.getElementById('popTitle').innerText = "Konfirmasi";
     document.getElementById('popMsg').innerText = msg;
-    document.getElementById('popBtns').innerHTML = `<button class="btn-pop" style="background:#f1f5f9; color:var(--text-main);" onclick="closePop()">Batal</button><button class="btn-pop" style="background:var(--primary-red); color:white;" id="popOk">Yakin</button>`;
+    document.getElementById('popBtns').innerHTML = `<button class="btn-pop" style="background:var(--border-color); color:var(--text-main);" onclick="closePop()">Batal</button><button class="btn-pop" style="background:var(--primary-accent); color:#000;" id="popOk">Yakin</button>`;
     document.getElementById('popOk').onclick = () => { closePop(); callback(); };
     ov.style.display = 'flex'; setTimeout(() => ov.style.opacity = '1', 10);
   }
@@ -314,6 +336,15 @@
       state.master = resMaster.data || []; state.izin = resIzin.data || []; state.lembur = resLembur.data || [];
       populateFilterDropdowns(); distributeRendering();
     } catch (err) { showCustomAlert("Gagal terhubung ke Database Supabase."); }
+  }
+
+  // --- QUICK DELETE FUNCTION (Hapus Agar Karyawan Bisa Input Ulang) ---
+  function quickDelete(table, id) {
+    showCustomConfirm("Hapus data ini? Slot tanggal ini akan kembali TERBUKA sehingga karyawan dapat mengajukan ulang.", async () => {
+      await db.from(table).delete().eq('id', id);
+      showCustomAlert("Data berhasil dihapus dari sistem!");
+      fetchAllData();
+    });
   }
 
   function getMonthStringFromDate(dateStr) {
@@ -363,11 +394,11 @@
     pending.forEach(i => {
       h += `
       <div class="req-card">
-        <div class="req-header"><div class="req-title">${i.nama}</div><div class="req-date">#${i.id_karyawan}</div></div>
-        <div class="req-body"><strong>${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
-        <div class="action-btns">
-          <button class="btn-action btn-reject" onclick="updateStatus('data_izin', ${i.id}, 'IZIN TIDAK DIBERIKAN')">Tolak</button>
-          <button class="btn-action btn-approve" onclick="updateStatus('data_izin', ${i.id}, 'IZIN DIBERIKAN')">Setujui</button>
+        <div class="req-header"><div class="req-title">${i.nama}</div><div style="font-size:11px; color:var(--text-muted);">#${i.id_karyawan}</div></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
+        <div style="display:flex; gap:8px;">
+          <button style="flex:1; background:rgba(239, 68, 68, 0.1); color:#f87171; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_izin', ${i.id}, 'IZIN TIDAK DIBERIKAN')">Tolak</button>
+          <button style="flex:1; background:var(--primary-accent); color:#000; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_izin', ${i.id}, 'IZIN DIBERIKAN')">Setujui</button>
         </div>
       </div>`;
     }); box.innerHTML = h + '</div>';
@@ -381,11 +412,11 @@
     pending.forEach(l => {
       h += `
       <div class="req-card">
-        <div class="req-header"><div class="req-title">${l.nama}</div><div class="req-date">${l.tanggal_lembur}</div></div>
-        <div class="req-body"><strong>${l.jam_awal} - ${l.jam_selesai}</strong> (${formatTeksJam(l.durasi)})<br>"${l.alasan}"</div>
-        <div class="action-btns">
-          <button class="btn-action btn-reject" onclick="updateStatus('data_lembur', ${l.id}, 'DITOLAK')">Tolak</button>
-          <button class="btn-action btn-approve" onclick="updateStatus('data_lembur', ${l.id}, 'DISETUJUI')">Setujui</button>
+        <div class="req-header"><div class="req-title">${l.nama}</div><div style="font-size:11px; color:var(--text-muted);">${l.tanggal_lembur}</div></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${l.jam_awal} - ${l.jam_selesai}</strong> (${formatTeksJam(l.durasi)})<br>"${l.alasan}"</div>
+        <div style="display:flex; gap:8px;">
+          <button style="flex:1; background:rgba(239, 68, 68, 0.1); color:#f87171; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_lembur', ${l.id}, 'DITOLAK')">Tolak</button>
+          <button style="flex:1; background:var(--primary-accent); color:#000; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_lembur', ${l.id}, 'DISETUJUI')">Setujui</button>
         </div>
       </div>`;
     }); box.innerHTML = h + '</div>';
@@ -406,9 +437,10 @@
       h += `
       <div class="req-card">
         <div class="req-header"><div class="req-title">${i.nama}</div><span class="status-badge ${sClass}">${i.status}</span></div>
-        <div class="req-body"><strong>${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
-        <div style="border-top:1px dashed var(--border-color); padding-top:10px; margin-top:5px; text-align:right;">
-          <button onclick="openAct('data_izin', ${i.id}, '${i.status}', '${i.nama.replace(/'/g, "\\'")}')" style="background:#f1f5f9; border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; color:var(--text-main);">⚙️ Kelola Data</button>
+        <div class="req-body"><strong style="color:var(--text-main);">${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
+        <div class="action-group">
+          <button onclick="openAct('data_izin', ${i.id}, '${i.status}', '${i.nama.replace(/'/g, "\\'")}')" class="btn-icon">⚙️ Kelola</button>
+          <button onclick="quickDelete('data_izin', ${i.id})" class="btn-icon btn-icon-del">🗑️ Hapus</button>
         </div>
       </div>`;
     }); box.innerHTML = h + '</div>';
@@ -416,12 +448,11 @@
 
   function renderDtL_Kal() {
     const box = document.getElementById('boxDtLemburKal'); const curStr = getActiveMonthString();
-    // TAMPILKAN SEMUA DATA YANG SUDAH DIPROSES (SETUJU & TOLAK)
     const currData = state.lembur.filter(x => x.bulan_lembur === curStr && x.status !== 'PENDING');
     const days = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
     let fd = new Date(currentCalYear, currentCalMonth, 1).getDay(); fd = (fd === 0) ? 6 : fd - 1;
     
-    let h = `<div class="calendar-controls"><button onclick="changeCalMonth(-1)">&#10094; Mundur</button><div style="font-weight:800; font-size:14px; color:var(--primary-red);">${curStr}</div><button onclick="changeCalMonth(1)">Maju &#10095;</button></div><div class="calendar-grid">`;
+    let h = `<div class="calendar-controls"><button onclick="changeCalMonth(-1)">&#10094; Prev</button><div style="font-weight:800; font-size:14px; color:var(--primary-accent);">${curStr}</div><button onclick="changeCalMonth(1)">Next &#10095;</button></div><div class="calendar-grid">`;
     for(let i=0; i<fd; i++) h += `<div class="cal-day" style="background:transparent; border:none;"></div>`;
     for(let d=1; d<=days; d++) {
       const dStr = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -436,11 +467,11 @@
     let html = '';
     records.forEach(r => {
       const isDitolak = r.status === 'DITOLAK';
-      const statusBadge = isDitolak ? '<span style="font-size:9px; background:#fee2e2; color:#b91c1c; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
-      const jamStyle = isDitolak ? 'text-decoration:line-through; color:#94a3b8; background:#f1f5f9;' : 'color:var(--primary-red); background:#fff5f5;';
+      const statusBadge = isDitolak ? '<span style="font-size:9px; background:rgba(239, 68, 68, 0.15); color:#f87171; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
+      const jamStyle = isDitolak ? 'text-decoration:line-through; color:var(--text-muted); background:transparent;' : 'color:#000; background:var(--primary-accent);';
       
       html += `
-      <div style="padding: 12px 0; border-bottom: 1px dashed rgba(0,0,0,0.1); display:flex; justify-content:space-between; align-items:center;">
+      <div style="padding: 12px 0; border-bottom: 1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">👤 ${r.nama} ${statusBadge}</span>
         <div style="text-align:right;">
           <div style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; display:inline-block; margin-bottom:4px; ${jamStyle}">${formatTeksJam(r.durasi)}</div>
@@ -465,10 +496,7 @@
       const dVal = parseFloat(x.durasi) || 0;
       if(!grp[x.nama]) grp[x.nama] = { id: x.id_karyawan, rec: [], totalJam: 0 }; 
       grp[x.nama].rec.push(x); 
-      // CUMA DIJUMLAHIN KALAU STATUSNYA DISETUJUI
-      if(x.status === 'DISETUJUI') {
-        grp[x.nama].totalJam += dVal; 
-      }
+      if(x.status === 'DISETUJUI') { grp[x.nama].totalJam += dVal; }
     });
     
     let h = '<div class="grid-2">'; let idx=0;
@@ -477,20 +505,21 @@
       <div class="acc-item">
         <div class="acc-header" onclick="toggleAcc('opAcc-${idx}')">
           <span>${n} <span style="font-size:10px;color:var(--text-muted);">#${grp[n].id}</span></span>
-          <span class="acc-badge" style="background:#fff0f2; color:var(--primary-red); padding:4px 8px; border-radius:6px;">${formatTeksJam(grp[n].totalJam)}</span>
+          <span class="acc-badge">${formatTeksJam(grp[n].totalJam)}</span>
         </div>
         <div id="opAcc-${idx}" class="acc-body">`;
       grp[n].rec.forEach(r => { 
         const isDitolak = r.status === 'DITOLAK';
-        const statusBadge = isDitolak ? '<span style="font-size:9px; background:#fee2e2; color:#b91c1c; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
-        const durasiStyle = isDitolak ? 'text-decoration:line-through; color:#94a3b8;' : 'color:var(--text-main);';
+        const statusBadge = isDitolak ? '<span style="font-size:9px; background:rgba(239, 68, 68, 0.15); color:#f87171; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
+        const durasiStyle = isDitolak ? 'text-decoration:line-through; color:var(--text-muted);' : 'color:var(--text-main);';
 
         h += `
         <div class="acc-row">
-          <div style="flex:1;"><span>📅 ${r.tanggal_lembur} <strong style="color:var(--primary-red); font-size:10px;">(${r.jam_awal} - ${r.jam_selesai})</strong></span> ${statusBadge}</div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="flex:1;"><span>📅 ${r.tanggal_lembur} <strong style="color:var(--primary-accent); font-size:10px;">(${r.jam_awal} - ${r.jam_selesai})</strong></span> ${statusBadge}</div>
+          <div style="display:flex; align-items:center; gap:8px;">
             <strong style="${durasiStyle}">${formatTeksJam(r.durasi)}</strong>
-            <button onclick="openAct('data_lembur', ${r.id}, '${r.status}', '${n.replace(/'/g, "\\'")}')" style="background:#f1f5f9; border:none; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:700; cursor:pointer; color:var(--text-main);">⚙️</button>
+            <button onclick="openAct('data_lembur', ${r.id}, '${r.status}', '${n.replace(/'/g, "\\'")}')" class="btn-icon">⚙️</button>
+            <button onclick="quickDelete('data_lembur', ${r.id})" class="btn-icon btn-icon-del">🗑️</button>
           </div>
         </div>`; 
       });
@@ -507,7 +536,6 @@
   }
 
   async function saveAct() { await db.from(curT).update({ status: document.getElementById('actStatus').value }).eq('id', curId); closeModal('actModal'); showCustomAlert("Berhasil diperbarui!"); fetchAllData(); }
-  function deleteAct() { showCustomConfirm("Hapus permanen data ini dari database?", async () => { await db.from(curT).delete().eq('id', curId); closeModal('actModal'); showCustomAlert("Data berhasil dihapus!"); fetchAllData(); }); }
 
   // --- DATABASE (ALL TIME VIEW & EXPORT) ---
   function renderDbIzin() {
@@ -518,7 +546,14 @@
     let h = '<div class="grid-2">';
     filtered.forEach(i => {
       const sClass = i.status.includes('TIDAK') ? 'DITOLAK' : 'DISETUJUI';
-      h += `<div class="req-card"><div class="req-header"><div class="req-title">${i.nama}</div><span class="status-badge ${sClass}">${i.status}</span></div><div class="req-body"><strong>${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div></div>`;
+      h += `
+      <div class="req-card">
+        <div class="req-header"><div class="req-title">${i.nama}</div><span class="status-badge ${sClass}">${i.status}</span></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
+        <div class="action-group">
+          <button onclick="quickDelete('data_izin', ${i.id})" class="btn-icon btn-icon-del">🗑️ Hapus Permanen</button>
+        </div>
+      </div>`;
     }); box.innerHTML = h + '</div>';
   }
 
@@ -532,10 +567,7 @@
       const dVal = parseFloat(x.durasi) || 0;
       if(!grp[x.nama]) grp[x.nama] = { id: x.id_karyawan, rec: [], totalJam: 0 }; 
       grp[x.nama].rec.push(x); 
-      // CUMA DIJUMLAHIN KALAU STATUSNYA DISETUJUI
-      if(x.status === 'DISETUJUI') {
-        grp[x.nama].totalJam += dVal; 
-      }
+      if(x.status === 'DISETUJUI') { grp[x.nama].totalJam += dVal; }
     });
     
     let h = '<div class="grid-2">'; let idx=0;
@@ -544,15 +576,21 @@
       <div class="acc-item">
         <div class="acc-header" onclick="toggleAcc('dbAcc-${idx}')">
           <span>${n} <span style="font-size:10px;color:var(--text-muted);">#${grp[n].id}</span></span>
-          <span class="acc-badge" style="background:#fff0f2; color:var(--primary-red); padding:4px 8px; border-radius:6px;">${formatTeksJam(grp[n].totalJam)}</span>
+          <span class="acc-badge">${formatTeksJam(grp[n].totalJam)}</span>
         </div>
         <div id="dbAcc-${idx}" class="acc-body">`;
       grp[n].rec.forEach(r => { 
         const isDitolak = r.status === 'DITOLAK';
-        const statusBadge = isDitolak ? '<span style="font-size:9px; background:#fee2e2; color:#b91c1c; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
-        const durasiStyle = isDitolak ? 'text-decoration:line-through; color:#94a3b8;' : 'color:var(--text-main);';
+        const statusBadge = isDitolak ? '<span style="font-size:9px; background:rgba(239, 68, 68, 0.15); color:#f87171; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
+        const durasiStyle = isDitolak ? 'text-decoration:line-through; color:var(--text-muted);' : 'color:var(--text-main);';
 
-        h += `<div class="acc-row"><span>📅 ${r.tanggal_lembur} <strong style="color:var(--primary-red); font-size:10px;">(${r.jam_awal} - ${r.jam_selesai})</strong></span> ${statusBadge} <strong style="${durasiStyle}">${formatTeksJam(r.durasi)}</strong></div>`; 
+        h += `<div class="acc-row">
+          <span>📅 ${r.tanggal_lembur} <strong style="color:var(--primary-accent); font-size:10px;">(${r.jam_awal} - ${r.jam_selesai})</strong> ${statusBadge}</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong style="${durasiStyle}">${formatTeksJam(r.durasi)}</strong>
+            <button onclick="quickDelete('data_lembur', ${r.id})" class="btn-icon btn-icon-del">🗑️</button>
+          </div>
+        </div>`; 
       });
       h += `</div></div>`; idx++;
     } box.innerHTML = h + '</div>';
@@ -567,7 +605,6 @@
       fn = `Laporan_Izin_${b.replace(/\s/g, '_')}.csv`;
     } else {
       const b = document.getElementById('filterBulanDbLembur').value; const s = document.getElementById('searchDbLembur').value.toLowerCase();
-      // EXPORT JUGA MEMBAWA DATA YANG DITOLAK
       raw = state.lembur.filter(x => x.status !== 'PENDING' && (x.nama.toLowerCase().includes(s) || x.id_karyawan.toLowerCase().includes(s)) && (b === 'ALL' || x.bulan_lembur === b))
       .map(l => ({"ID Karyawan": l.id_karyawan, "Nama Karyawan": l.nama, "Tanggal Lembur": l.tanggal_lembur, "Jam Awal": l.jam_awal, "Jam Selesai": l.jam_selesai, "Durasi (Jam)": parseFloat(l.durasi), "Alasan": l.alasan, "Bulan Rekap": l.bulan_lembur, "Status": l.status}));
       fn = `Laporan_Lembur_${b.replace(/\s/g, '_')}.csv`;
@@ -586,8 +623,11 @@
       const safenm = m.nama_karyawan.replace(/'/g, "\\'");
       h += `
       <div class="req-card" style="display:flex; justify-content:space-between; align-items:center;">
-        <div><strong>${m.nama_karyawan}</strong><br><span style="font-size:11px; color:var(--text-muted);">ID: #${m.id_karyawan}</span></div>
-        <div style="display:flex; gap:8px;"><button onclick="openKarModal('UPDATE', '${m.id_karyawan}', '${safenm}')" style="background:#ebf8ff; color:#3182ce; border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Edit</button><button onclick="deleteKaryawan('${m.id_karyawan}')" style="background:#fee2e2; color:#991b1b; border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">Hapus</button></div>
+        <div><strong style="color:var(--text-main);">${m.nama_karyawan}</strong><br><span style="font-size:11px; color:var(--text-muted);">ID: #${m.id_karyawan}</span></div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="openKarModal('UPDATE', '${m.id_karyawan}', '${safenm}')" class="btn-icon">Edit</button>
+          <button onclick="deleteKaryawan('${m.id_karyawan}')" class="btn-icon btn-icon-del">Hapus</button>
+        </div>
       </div>`;
     }); box.innerHTML = h + '</div>';
   }
