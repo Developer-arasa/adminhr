@@ -6,7 +6,7 @@
   <title>Admin Portal - Arasa Store</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
@@ -185,7 +185,7 @@
     </div>
 
     <div id="dbI" style="display: block;">
-      <button class="btn-outline" onclick="exportData('izin')">📥 DOWNLOAD LAPORAN IZIN</button>
+      <button class="btn-outline" onclick="exportData('izin')">📥 DOWNLOAD LAPORAN IZIN (EXCEL)</button>
       <div class="filter-group">
         <input type="text" id="searchDbIzin" placeholder="🔍 Cari Nama..." onkeyup="renderDbIzin()">
         <select id="filterBulanDbIzin" onchange="renderDbIzin()"></select>
@@ -194,7 +194,7 @@
     </div>
 
     <div id="dbL" style="display: none;">
-      <button class="btn-outline" onclick="exportData('lembur')">📥 DOWNLOAD LAPORAN LEMBUR</button>
+      <button class="btn-outline" onclick="exportData('lembur')">📥 DOWNLOAD LAPORAN LEMBUR (EXCEL)</button>
       <div class="filter-group">
         <input type="text" id="searchDbLembur" placeholder="🔍 Cari Nama..." onkeyup="renderDbLembur()">
         <select id="filterBulanDbLembur" onchange="renderDbLembur()"></select>
@@ -691,29 +691,117 @@
     } box.innerHTML = h + '</div>';
   }
 
+  // --- REVISI EKSPOR DATA MENGGUNAKAN SHEETJS (MULTI-SHEET) ---
   function exportData(t) {
-    let raw = []; let fn = "";
-    if(t === 'izin') {
-      const b = document.getElementById('filterBulanDbIzin').value; const s = document.getElementById('searchDbIzin').value.toLowerCase();
-      raw = state.izin.filter(x => {
-        const nm = getNama(x).toLowerCase();
-        const idK = (x.id_karyawan || '').toLowerCase();
-        return x.status !== 'PENDING' && (nm.includes(s) || idK.includes(s)) && (b === 'ALL' || getMonthStringFromDate(x.tanggal_izin_mulai) === b);
-      }).map(i => ({"ID Karyawan": i.id_karyawan, "Nama Karyawan": getNama(i), "Tgl Mulai": i.tanggal_izin_mulai, "Tgl Akhir": i.tanggal_izin_akhir, "Kategori": i.kategori_izin, "Alasan": i.alasan, "Status": i.status}));
-      fn = `Laporan_Izin_${b.replace(/\s/g, '_')}.csv`;
-    } else {
-      const b = document.getElementById('filterBulanDbLembur').value; const s = document.getElementById('searchDbLembur').value.toLowerCase();
-      raw = state.lembur.filter(x => {
-        const nm = getNama(x).toLowerCase();
-        const idK = (x.id_karyawan || '').toLowerCase();
-        return x.status !== 'PENDING' && (nm.includes(s) || idK.includes(s)) && (b === 'ALL' || (x.bulan_lembur || '').trim() === b);
-      }).map(l => ({"ID Karyawan": l.id_karyawan, "Nama Karyawan": getNama(l), "Tanggal Lembur": l.tanggal_lembur, "Jam Awal": l.jam_awal, "Jam Selesai": l.jam_selesai, "Durasi (Jam)": parseFloat(l.durasi), "Alasan": l.alasan, "Bulan Rekap": l.bulan_lembur, "Status": l.status}));
-      fn = `Laporan_Lembur_${b.replace(/\s/g, '_')}.csv`;
-    }
-    if(!raw.length) return showCustomAlert("❌ Data kosong, tidak ada laporan yang bisa dicetak berdasarkan filter ini.");
+    if (typeof XLSX === 'undefined') return showCustomAlert("Sistem sedang memuat komponen Excel, mohon tunggu beberapa detik dan coba lagi.");
+
+    let rawData = []; 
+    let summaryData = []; 
+    let fileName = "";
     
-    const csv = Papa.unparse(raw, {delimiter:";", quotes:true}); const blob = new Blob(["\ufeff" + csv], {type:'text/csv;charset=utf-8;'});
-    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = fn; link.click();
+    const bulan = t === 'izin' ? document.getElementById('filterBulanDbIzin').value : document.getElementById('filterBulanDbLembur').value;
+    const searchVal = t === 'izin' ? document.getElementById('searchDbIzin').value.toLowerCase() : document.getElementById('searchDbLembur').value.toLowerCase();
+
+    if(t === 'izin') {
+      const filtered = state.izin.filter(x => {
+        const nm = getNama(x).toLowerCase();
+        const idK = (x.id_karyawan || '').toLowerCase();
+        return x.status !== 'PENDING' && (nm.includes(searchVal) || idK.includes(searchVal)) && (bulan === 'ALL' || getMonthStringFromDate(x.tanggal_izin_mulai) === bulan);
+      });
+      if(!filtered.length) return showCustomAlert("❌ Data kosong, tidak ada laporan yang bisa dicetak.");
+
+      // Sheet 1: Detail
+      rawData = filtered.map(i => ({
+        "ID Karyawan": i.id_karyawan, 
+        "Nama Karyawan": getNama(i), 
+        "Tgl Mulai": i.tanggal_izin_mulai, 
+        "Tgl Akhir": i.tanggal_izin_akhir, 
+        "Kategori": i.kategori_izin, 
+        "Alasan": i.alasan, 
+        "Status": i.status
+      }));
+      
+      // Sheet 2: Summary (Group By Name)
+      const grp = {};
+      filtered.forEach(x => {
+          const nm = getNama(x);
+          if(!grp[nm]) grp[nm] = { id: x.id_karyawan, disetujui: 0, ditolak: 0 };
+          if((x.status || '').includes('TIDAK') || x.status === 'DITOLAK') {
+              grp[nm].ditolak += 1;
+          } else {
+              grp[nm].disetujui += 1;
+          }
+      });
+      for(const n in grp) {
+        summaryData.push({
+            "ID Karyawan": grp[n].id, 
+            "Nama Karyawan": n, 
+            "Total Pengajuan Disetujui": grp[n].disetujui, 
+            "Total Pengajuan Ditolak": grp[n].ditolak
+        });
+      }
+      
+      fileName = `Laporan_Izin_Arasa_${bulan.replace(/\s/g, '_')}.xlsx`;
+
+    } else {
+      const filtered = state.lembur.filter(x => {
+        const nm = getNama(x).toLowerCase();
+        const idK = (x.id_karyawan || '').toLowerCase();
+        return x.status !== 'PENDING' && (nm.includes(searchVal) || idK.includes(searchVal)) && (bulan === 'ALL' || (x.bulan_lembur || '').trim() === bulan);
+      });
+      if(!filtered.length) return showCustomAlert("❌ Data kosong, tidak ada laporan yang bisa dicetak.");
+
+      // Sheet 1: Detail
+      rawData = filtered.map(l => ({
+        "ID Karyawan": l.id_karyawan, 
+        "Nama Karyawan": getNama(l), 
+        "Tanggal Lembur": l.tanggal_lembur, 
+        "Jam Awal": l.jam_awal, 
+        "Jam Selesai": l.jam_selesai, 
+        "Durasi (Jam)": parseFloat(l.durasi) || 0, 
+        "Alasan": l.alasan, 
+        "Bulan Rekap": l.bulan_lembur, 
+        "Status": l.status
+      }));
+      
+      // Sheet 2: Summary (Group by Name, Sum Duration)
+      const grp = {};
+      filtered.forEach(x => {
+          const nm = getNama(x);
+          const dVal = parseFloat(x.durasi) || 0;
+          if(!grp[nm]) grp[nm] = { id: x.id_karyawan, totalJamDisetujui: 0, totalJamDitolak: 0 };
+          if(x.status === 'DISETUJUI') {
+              grp[nm].totalJamDisetujui += dVal;
+          } else if(x.status === 'DITOLAK') {
+              grp[nm].totalJamDitolak += dVal;
+          }
+      });
+      
+      for(const n in grp) {
+        summaryData.push({
+            "ID Karyawan": grp[n].id, 
+            "Nama Karyawan": n, 
+            "Total Jam Disetujui": grp[n].totalJamDisetujui,
+            "Total Jam Ditolak": grp[n].totalJamDitolak
+        });
+      }
+      
+      fileName = `Laporan_Lembur_Arasa_${bulan.replace(/\s/g, '_')}.xlsx`;
+    }
+
+    // Eksekusi Pembuatan Excel
+    const wb = XLSX.utils.book_new();
+    const wsDetail = XLSX.utils.json_to_sheet(rawData);
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    
+    // Atur Lebar Kolom Biar Rapi
+    wsDetail['!cols'] = [{wch:15}, {wch:25}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:30}, {wch:15}];
+    wsSummary['!cols'] = [{wch:15}, {wch:25}, {wch:25}, {wch:25}];
+
+    XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Data");
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Rangkuman Karyawan");
+    
+    XLSX.writeFile(wb, fileName);
   }
 
   function renderKaryawan() {
