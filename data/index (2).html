@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal - Arasa Store</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+    
+    :root { 
+      --bg-body: #09090b; 
+      --card-bg: #18181b; 
+      --primary-accent: #10b981; 
+      --primary-dark: #059669;
+      --text-main: #f8fafc; 
+      --text-muted: #94a3b8; 
+      --border-color: #27272a; 
+      --btn-approve: #10b981; 
+      --btn-reject: #ef4444; 
+    }
+    
+    body { font-family: 'Poppins', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; display: flex; justify-content: center; min-height: 100vh; }
+    .app-wrapper { width: 100%; max-width: 1200px; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; }
+    
+    .panel { background: var(--card-bg); border-radius: 20px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    
+    .brand-area { text-align: center; margin-bottom: 20px; }
+    .brand-area h1 { margin: 0; font-size: 26px; font-weight: 800; color: var(--primary-accent); text-transform: uppercase; letter-spacing: 1px;}
+    .brand-area p { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+    
+    .nav-scroll-container { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 5px; scrollbar-width: none; }
+    .nav-scroll-container::-webkit-scrollbar { display: none; }
+    .nav-btn { flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; background: #27272a; color: var(--text-muted); text-align: center; white-space: nowrap; border: 1px solid transparent; transition: 0.3s;}
+    .nav-btn.active, .nav-btn:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary-accent); border-color: var(--primary-accent); }
+    
+    .sub-nav-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; background: transparent; color: var(--text-muted); text-align: center; border: 1px solid var(--border-color); transition: 0.3s; }
+    .sub-nav-btn.active { background: rgba(16, 185, 129, 0.1); border-color: var(--primary-accent); color: var(--primary-accent); }
+    
+    .view-section { display: none; animation: fadeIn 0.3s ease;}
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    @media (min-width: 768px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+    
+    .stat-card { text-align: center; padding: 20px; border-radius: 16px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); }
+    .stat-val { font-size: 36px; font-weight: 800; color: var(--primary-accent); margin: 5px 0; text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);}
+    
+    .req-card { background: #121214; border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
+    .req-card:hover { border-color: #3f3f46; }
+    .req-header { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; margin-bottom: 10px; align-items:center;}
+    .req-title { font-size: 14px; font-weight: 700; color: var(--text-main); }
+    .req-body { font-size: 12px; color: #a1a1aa; line-height: 1.5; margin-bottom: 15px; }
+    
+    .status-badge { font-size: 10px; font-weight: 800; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px;}
+    .DISETUJUI, .IZIN_DIBERIKAN { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .DITOLAK, .IZIN_TIDAK_DIBERIKAN { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .PENDING { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    
+    .btn-primary { background: var(--primary-accent); color: #000; width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-family: 'Poppins'; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);}
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px);}
+    .btn-outline { background: transparent; color: var(--primary-accent); border: 1px solid var(--primary-accent); width: 100%; padding: 12px; border-radius: 12px; font-weight: 800; cursor: pointer; margin-bottom: 15px; font-family: 'Poppins'; transition: 0.2s;}
+    .btn-outline:hover { background: rgba(16, 185, 129, 0.1); }
+    
+    .btn-icon { background: #27272a; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; color: #fff; transition: 0.2s; font-weight: 700;}
+    .btn-icon:hover { background: #3f3f46; }
+    .btn-icon-del { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);}
+    .btn-icon-del:hover { background: #ef4444; color: #fff; }
+    .action-group { display: flex; gap: 8px; align-items: center; justify-content: flex-end; border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 5px; }
+
+    .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .calendar-controls button { background: #27272a; border: 1px solid #3f3f46; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; color: var(--text-main); }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .cal-day { background: #121214; border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 4px; text-align: center; min-height: 55px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: 0.2s;}
+    .cal-day.has-data:hover { border-color: var(--primary-accent); transform: scale(1.05); cursor: pointer;}
+    .cal-badge { font-size: 10px; font-weight: 800; padding: 3px 6px; border-radius: 6px; margin-top: 4px; }
+    .cal-badge.zero { background: transparent; color: transparent; }
+    .cal-badge.red { background: var(--primary-accent); color: #000; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);}
+    
+    .acc-item { background: #121214; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border-color); overflow: hidden; }
+    .acc-header { padding: 15px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-main);}
+    .acc-badge { font-size:11px; background: rgba(16, 185, 129, 0.1); color: var(--primary-accent); padding: 4px 8px; border-radius: 6px; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.2);}
+    .acc-body { display: none; padding: 15px; border-top: 1px dashed var(--border-color); }
+    .acc-row { display: flex; justify-content: space-between; font-size: 12px; padding: 10px 0; border-bottom: 1px solid #1f1f22; align-items: center;}
+    .acc-row:last-child { border-bottom: none; padding-bottom: 0; }
+    
+    input, select { width: 100%; padding: 14px; border: 1px solid var(--border-color); border-radius: 12px; box-sizing: border-box; background: #09090b; color: #fff; margin-bottom: 15px; outline: none; font-family: 'Poppins'; font-weight: 600; }
+    input:focus, select:focus { border-color: var(--primary-accent); }
+    
+    .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; cursor: pointer; }
+    .modal-box { position: relative; background: var(--card-bg); width: 90%; max-width: 380px; border-radius: 24px; padding: 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: left; max-height: 80vh; overflow-y: auto; border: 1px solid var(--border-color); cursor: default;}
+    .btn-pop { padding: 12px 20px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; min-width: 100px; font-family: 'Poppins'; transition: 0.2s;}
+    
+    .btn-close-x {
+      position: absolute; top: 15px; right: 18px; background: transparent; border: none;
+      color: var(--text-muted); font-size: 20px; font-weight: 800; cursor: pointer; transition: 0.2s;
+    }
+    .btn-close-x:hover { color: var(--primary-accent); transform: scale(1.1); }
+
+    .filter-group { display: flex; gap: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  
+  <div class="panel">
+    <div class="brand-area">
+      <h1>Arasa Admin</h1>
+      <p>Management & Approval System</p>
+    </div>
+    <div class="nav-scroll-container">
+      <button class="nav-btn active" id="nav-vDash" onclick="switchView('vDash')">Overview</button>
+      <button class="nav-btn" id="nav-vApp" onclick="switchView('vApp')">Approval</button>
+      <button class="nav-btn" id="nav-vData" onclick="switchView('vData')">Data Terpadu</button>
+      <button class="nav-btn" id="nav-vDb" onclick="switchView('vDb')">Database</button>
+      <button class="nav-btn" id="nav-vKar" onclick="switchView('vKar')">Karyawan</button>
+    </div>
+  </div>
+
+  <div id="vDash" class="view-section active panel">
+    <div class="grid-2">
+      <div class="stat-card">Pending Izin<br><div class="stat-val" id="countIzin">0</div></div>
+      <div class="stat-card">Pending Lembur<br><div class="stat-val" id="countLembur">0</div></div>
+    </div>
+  </div>
+
+  <div id="vApp" class="view-section panel">
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <button class="sub-nav-btn active" onclick="switchAppTab('apI', this)">Izin</button>
+      <button class="sub-nav-btn" onclick="switchAppTab('apL', this)">Lembur</button>
+    </div>
+    <div id="apI"><div id="boxAppIzin"></div></div>
+    <div id="apL" style="display:none;">
+      <button class="btn-primary" onclick="bulkApproveLembur()">SIKAT SEMUA (APPROVE ALL)</button>
+      <div id="boxAppLembur"></div>
+    </div>
+  </div>
+
+  <div id="vData" class="view-section panel">
+    <div style="text-align:center; font-weight:800; font-size:12px; color:var(--text-muted); text-transform:uppercase; margin-bottom:15px; letter-spacing:1px;">
+      Mode: Operasional Bulan Berjalan
+    </div>
+    
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <button class="sub-nav-btn active" onclick="switchDataTab('dtI', this)">Izin (Bulan Ini)</button>
+      <button class="sub-nav-btn" onclick="switchDataTab('dtL', this)">Lembur (Bulan Ini)</button>
+    </div>
+
+    <div id="dtI" style="display: block;">
+      <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <button class="sub-nav-btn active" onclick="switchIzinTab('dtI_List', this)">Daftar</button>
+        <button class="sub-nav-btn" onclick="switchIzinTab('dtI_Kal', this)">Kalender</button>
+      </div>
+      <div id="dtI_List" style="display: block;"><div id="boxDtIzin"></div></div>
+      <div id="dtI_Kal" style="display: none;"><div id="boxDtIzinKal"></div></div>
+    </div>
+
+    <div id="dtL" style="display: none;">
+      <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <button class="sub-nav-btn active" onclick="switchLemburTab('dtL_Kal', this)">Kalender</button>
+        <button class="sub-nav-btn" onclick="switchLemburTab('dtL_Kar', this)">Per Karyawan</button>
+      </div>
+      
+      <div id="dtL_Kal" style="display: block;"><div id="boxDtLemburKal"></div></div>
+      <div id="dtL_Kar" style="display: none;">
+        <input type="text" id="searchDtL_Kar" placeholder="🔍 Cari Nama (Bulan Terpilih)..." onkeyup="renderDtL_Kar()">
+        <div id="boxDtLemburKar"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vDb" class="view-section panel">
+    <div style="text-align:center; font-weight:800; font-size:12px; color:var(--text-muted); text-transform:uppercase; margin-bottom:15px; letter-spacing:1px;">
+      Mode: Arsip Keseluruhan Data
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:20px;">
+      <button class="sub-nav-btn active" onclick="switchDbTab('dbI', this)">DB Izin</button>
+      <button class="sub-nav-btn" onclick="switchDbTab('dbL', this)">DB Lembur</button>
+    </div>
+
+    <div id="dbI" style="display: block;">
+      <button class="btn-outline" onclick="exportData('izin')">📥 DOWNLOAD LAPORAN IZIN (EXCEL)</button>
+      <div class="filter-group">
+        <input type="text" id="searchDbIzin" placeholder="🔍 Cari Nama..." onkeyup="renderDbIzin()">
+        <select id="filterBulanDbIzin" onchange="renderDbIzin()"></select>
+      </div>
+      <div id="boxDbIzin"></div>
+    </div>
+
+    <div id="dbL" style="display: none;">
+      <button class="btn-outline" onclick="exportData('lembur')">📥 DOWNLOAD LAPORAN LEMBUR (EXCEL)</button>
+      <div class="filter-group">
+        <input type="text" id="searchDbLembur" placeholder="🔍 Cari Nama..." onkeyup="renderDbLembur()">
+        <select id="filterBulanDbLembur" onchange="renderDbLembur()"></select>
+      </div>
+      <div id="boxDbLembur"></div>
+    </div>
+  </div>
+
+  <div id="vKar" class="view-section panel">
+    <button class="btn-primary" onclick="openKarModal('ADD')">+ TAMBAH KARYAWAN</button>
+    <div id="boxListKaryawan"></div>
+  </div>
+
+</div>
+
+<div id="popupOverlay" class="modal-overlay" onclick="if(event.target===this) closePop()">
+  <div class="modal-box" style="text-align:center;">
+    <button class="btn-close-x" onclick="closePop()">✕</button>
+    <h3 id="popTitle" style="color:var(--text-main); margin-top:0;">Notifikasi</h3>
+    <p id="popMsg" style="font-size:13px; margin-bottom:20px; color:var(--text-muted);"></p>
+    <div id="popBtns" style="display:flex; gap:10px; justify-content:center;"></div>
+  </div>
+</div>
+
+<div id="actModal" class="modal-overlay" onclick="if(event.target===this) closeModal('actModal')">
+  <div class="modal-box">
+    <button class="btn-close-x" onclick="closeModal('actModal')">✕</button>
+    <h3 style="color:var(--text-main); margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:10px;">⚙️ Kelola Data</h3>
+    <p id="actDesc" style="font-size:12px; color:var(--text-muted);"></p>
+    <label style="font-size:11px; font-weight:700; color:var(--text-main);">Ubah Status (Jika Salah):</label>
+    <select id="actStatus" style="width:100%; margin-bottom:20px;"></select>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-pop" style="background:var(--btn-approve); color:#000; flex:1;" onclick="saveAct()">Simpan</button>
+      <button class="btn-pop" style="background:var(--border-color); color:var(--text-main); flex:1;" onclick="closeModal('actModal')">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="karModal" class="modal-overlay" onclick="if(event.target===this) closeModal('karModal')">
+  <div class="modal-box">
+    <button class="btn-close-x" onclick="closeModal('karModal')">✕</button>
+    <h3 id="karTitle" style="color:var(--text-main); margin-top:0;">Form Karyawan</h3>
+    <input type="text" id="kId" placeholder="ID Karyawan">
+    <input type="text" id="kNm" placeholder="Nama Lengkap">
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <button class="btn-pop" style="background:var(--border-color); color:var(--text-main); flex:1;" onclick="closeModal('karModal')">Batal</button>
+      <button class="btn-pop" style="background:var(--primary-accent); color:#000; flex:1;" onclick="saveKar()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div id="kalenderModal" class="modal-overlay" onclick="if(event.target===this) closeModal('kalenderModal')">
+  <div class="modal-box">
+    <button class="btn-close-x" onclick="closeModal('kalenderModal')">✕</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+      <h3 id="kalenderModalTitle" style="margin:0; font-size: 15px; color:var(--text-main);">Daftar Lembur</h3>
+    </div>
+    <div id="kalenderModalContent"></div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://dhlmzugrqvrmoicbnmpn.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_4e2ckBZ-OzOaF4LBIS1ZTQ_y6Ve1AOh';
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let state = { master: [], izin: [], lembur: [] };
+  let currentCalMonth = new Date().getMonth(); 
+  let currentCalYear = new Date().getFullYear();
+  let curT = ''; let curId = null;
+
+  window.onload = () => { 
+    try { history.replaceState({ view: 'vDash' }, '', '#vDash'); } catch(e) {}
+    fetchAllData(); 
+  };
+
+  function getNama(row) {
+    if (row.nama && row.nama.trim() !== '') return row.nama;
+    const m = state.master.find(x => x.id_karyawan === row.id_karyawan);
+    return m ? m.nama_karyawan : 'Tanpa Nama';
+  }
+
+  function formatTeksJam(val) {
+    if(!val || val == 0) return "0 Menit";
+    let totalMenit = Math.round(parseFloat(val) * 60);
+    let j = Math.floor(totalMenit / 60);
+    let m = totalMenit % 60;
+    if(j > 0 && m > 0) return `${j} Jam ${m} Menit`;
+    if(j > 0) return `${j} Jam`;
+    return `${m} Menit`;
+  }
+
+  function showCustomAlert(msg) {
+    const ov = document.getElementById('popupOverlay'); 
+    document.getElementById('popTitle').innerText = "Notifikasi";
+    document.getElementById('popMsg').innerText = msg;
+    document.getElementById('popBtns').innerHTML = `<button class="btn-pop" style="background:var(--primary-accent); color:#000;" onclick="closePop()">OK</button>`;
+    ov.style.display = 'flex'; setTimeout(() => ov.style.opacity = '1', 10);
+  }
+
+  function showCustomConfirm(msg, callback) {
+    const ov = document.getElementById('popupOverlay'); 
+    document.getElementById('popTitle').innerText = "Konfirmasi";
+    document.getElementById('popMsg').innerText = msg;
+    document.getElementById('popBtns').innerHTML = `<button class="btn-pop" style="background:var(--border-color); color:var(--text-main);" onclick="closePop()">Batal</button><button class="btn-pop" style="background:var(--primary-accent); color:#000;" id="popOk">Yakin</button>`;
+    document.getElementById('popOk').onclick = () => { closePop(); callback(); };
+    ov.style.display = 'flex'; setTimeout(() => ov.style.opacity = '1', 10);
+  }
+
+  function closePop() { const ov = document.getElementById('popupOverlay'); ov.style.opacity = '0'; setTimeout(() => ov.style.display = 'none', 300); }
+  function closeModal(id) { const el = document.getElementById(id); el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }
+  function toggleAcc(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
+
+  function switchView(id) { 
+    document.querySelectorAll('.view-section').forEach(x => x.classList.remove('active')); document.getElementById(id).classList.add('active'); 
+    document.querySelectorAll('.nav-scroll-container .nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('nav-' + id).classList.add('active'); 
+    window.scrollTo(0, 0); 
+  }
+  function switchAppTab(id, el) { 
+    document.getElementById('apI').style.display = id === 'apI' ? 'block' : 'none'; document.getElementById('apL').style.display = id === 'apL' ? 'block' : 'none'; 
+    el.parentElement.querySelectorAll('.sub-nav-btn').forEach(x => x.classList.remove('active')); el.classList.add('active'); 
+  }
+  function switchDataTab(id, el) { 
+    document.getElementById('dtI').style.display = id === 'dtI' ? 'block' : 'none'; document.getElementById('dtL').style.display = id === 'dtL' ? 'block' : 'none'; 
+    el.parentElement.querySelectorAll('.sub-nav-btn').forEach(x => x.classList.remove('active')); el.classList.add('active'); 
+  }
+  function switchIzinTab(id, el) { 
+    document.getElementById('dtI_List').style.display = id === 'dtI_List' ? 'block' : 'none'; 
+    document.getElementById('dtI_Kal').style.display = id === 'dtI_Kal' ? 'block' : 'none'; 
+    el.parentElement.querySelectorAll('.sub-nav-btn').forEach(x => x.classList.remove('active')); el.classList.add('active'); 
+  }
+  function switchLemburTab(id, el) { 
+    document.getElementById('dtL_Kal').style.display = id === 'dtL_Kal' ? 'block' : 'none'; document.getElementById('dtL_Kar').style.display = id === 'dtL_Kar' ? 'block' : 'none'; 
+    el.parentElement.querySelectorAll('.sub-nav-btn').forEach(x => x.classList.remove('active')); el.classList.add('active'); 
+  }
+  function switchDbTab(id, el) { 
+    document.getElementById('dbI').style.display = id === 'dbI' ? 'block' : 'none'; document.getElementById('dbL').style.display = id === 'dbL' ? 'block' : 'none'; 
+    el.parentElement.querySelectorAll('.sub-nav-btn').forEach(x => x.classList.remove('active')); el.classList.add('active'); 
+  }
+
+  async function fetchAllData() {
+    try {
+      const [resMaster, resIzin, resLembur] = await Promise.all([
+        db.from('master_data').select('*').order('nama_karyawan'),
+        db.from('data_izin').select('*').order('created_at', { ascending: false }),
+        db.from('data_lembur').select('*').order('tanggal_lembur', { ascending: false })
+      ]);
+      
+      state.master = resMaster.data || []; state.izin = resIzin.data || []; state.lembur = resLembur.data || [];
+      populateFilterDropdowns(); distributeRendering();
+    } catch (err) { showCustomAlert("Gagal terhubung ke Database Supabase."); }
+  }
+
+  function quickDelete(table, id) {
+    showCustomConfirm("Hapus data ini? Slot tanggal ini akan kembali TERBUKA sehingga karyawan dapat mengajukan ulang.", async () => {
+      await db.from(table).delete().eq('id', id);
+      showCustomAlert("Data berhasil dihapus dari sistem!");
+      
+      const kalModal = document.getElementById('kalenderModal');
+      if (kalModal.style.display === 'flex') closeModal('kalenderModal');
+      
+      fetchAllData();
+    });
+  }
+
+  function getMonthStringFromDate(dateStr) {
+    if(!dateStr) return "-"; 
+    const parts = dateStr.split('-');
+    if(parts.length !== 3) return "-";
+    const mNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return `${mNames[parseInt(parts[1]) - 1]} ${parts[0]}`;
+  }
+
+  function getActiveMonthString() { 
+    const mNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']; 
+    return `${mNames[currentCalMonth]} ${currentCalYear}`; 
+  }
+
+  function changeCalMonth(step) {
+    currentCalMonth += step;
+    if(currentCalMonth < 0) { currentCalMonth = 11; currentCalYear--; } else if(currentCalMonth > 11) { currentCalMonth = 0; currentCalYear++; }
+    renderDtI(); renderDtI_Kal(); renderDtL_Kal(); renderDtL_Kar();
+  }
+
+  function populateFilterDropdowns() {
+    const mNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    let years = new Set([currentCalYear]);
+    state.izin.forEach(x => { const p = (x.tanggal_izin_mulai || '').split('-'); if(p && p[0]) years.add(parseInt(p[0])); });
+    state.lembur.forEach(x => { const p = (x.tanggal_lembur || '').split('-'); if(p && p[0]) years.add(parseInt(p[0])); });
+    
+    let optHTML = '<option value="ALL">Semua Bulan</option>';
+    Array.from(years).filter(y => !isNaN(y)).sort().forEach(y => {
+      mNames.forEach(m => { optHTML += `<option value="${m} ${y}">${m} ${y}</option>`; });
+    });
+    
+    document.getElementById('filterBulanDbIzin').innerHTML = optHTML;
+    document.getElementById('filterBulanDbLembur').innerHTML = optHTML;
+  }
+
+  function distributeRendering() {
+    document.getElementById('countIzin').innerText = state.izin.filter(x => x.status === 'PENDING').length;
+    document.getElementById('countLembur').innerText = state.lembur.filter(x => x.status === 'PENDING').length;
+    
+    renderAppIzin(); renderAppLembur(); 
+    renderDtI(); renderDtI_Kal(); renderDtL_Kal(); renderDtL_Kar();
+    renderDbIzin(); renderDbLembur(); renderKaryawan();
+  }
+
+  function renderAppIzin() {
+    const box = document.getElementById('boxAppIzin'); const pending = state.izin.filter(x => x.status === 'PENDING');
+    if(pending.length === 0) { box.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">✅ Semua izin sudah diproses.</div>'; return; }
+    
+    let h = '<div class="grid-2">';
+    pending.forEach(i => {
+      const nm = getNama(i);
+      h += `
+      <div class="req-card">
+        <div class="req-header"><div class="req-title">${nm}</div><div style="font-size:11px; color:var(--text-muted);">#${i.id_karyawan}</div></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
+        <div style="display:flex; gap:8px;">
+          <button style="flex:1; background:rgba(239, 68, 68, 0.1); color:#f87171; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_izin', ${i.id}, 'IZIN TIDAK DIBERIKAN')">Tolak</button>
+          <button style="flex:1; background:var(--primary-accent); color:#000; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_izin', ${i.id}, 'IZIN DIBERIKAN')">Setujui</button>
+          <button style="background:var(--border-color); color:var(--text-muted); border:none; padding:10px 15px; border-radius:10px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-muted)'" onclick="quickDelete('data_izin', ${i.id})" title="Hapus Permanen">🗑️</button>
+        </div>
+      </div>`;
+    }); box.innerHTML = h + '</div>';
+  }
+
+  function renderAppLembur() {
+    const box = document.getElementById('boxAppLembur'); const pending = state.lembur.filter(x => x.status === 'PENDING');
+    if(pending.length === 0) { box.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">✅ Tidak ada antrean lembur.</div>'; return; }
+    
+    let h = '<div class="grid-2">';
+    pending.forEach(l => {
+      const nm = getNama(l);
+      h += `
+      <div class="req-card">
+        <div class="req-header"><div class="req-title">${nm}</div><div style="font-size:11px; color:var(--text-muted);">${l.tanggal_lembur}</div></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${l.jam_awal} - ${l.jam_selesai}</strong> (${formatTeksJam(l.durasi)})<br>"${l.alasan}"</div>
+        <div style="display:flex; gap:8px;">
+          <button style="flex:1; background:rgba(239, 68, 68, 0.1); color:#f87171; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_lembur', ${l.id}, 'DITOLAK')">Tolak</button>
+          <button style="flex:1; background:var(--primary-accent); color:#000; border:none; padding:10px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="updateStatus('data_lembur', ${l.id}, 'DISETUJUI')">Setujui</button>
+          <button style="background:var(--border-color); color:var(--text-muted); border:none; padding:10px 15px; border-radius:10px; font-weight:700; cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--text-muted)'" onclick="quickDelete('data_lembur', ${l.id})" title="Hapus Permanen">🗑️</button>
+        </div>
+      </div>`;
+    }); box.innerHTML = h + '</div>';
+  }
+
+  async function updateStatus(table, id, status) { await db.from(table).update({ status: status }).eq('id', id); showCustomAlert("Status berhasil diperbarui!"); fetchAllData(); }
+  function bulkApproveLembur() { showCustomConfirm("Yakin ingin menyetujui semua data lembur yang pending?", async () => { const ids = state.lembur.filter(x => x.status === 'PENDING').map(x => x.id); if(ids.length > 0) { await db.from('data_lembur').update({ status: 'DISETUJUI' }).in('id', ids); showCustomAlert("Semua lemburan disetujui!"); fetchAllData(); } }); }
+
+  function renderDtI() {
+    const box = document.getElementById('boxDtIzin'); const curStr = getActiveMonthString();
+    const riwayat = state.izin.filter(x => x.status !== 'PENDING' && getMonthStringFromDate(x.tanggal_izin_mulai) === curStr);
+    if(riwayat.length === 0) { box.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Belum ada riwayat izin di bulan ${curStr}.</div>`; return; }
+    
+    let h = '<div class="grid-2">';
+    riwayat.forEach(i => {
+      const nm = getNama(i);
+      const sClass = (i.status || '').includes('TIDAK') ? 'DITOLAK' : 'DISETUJUI';
+      h += `
+      <div class="req-card">
+        <div class="req-header"><div class="req-title">${nm}</div><span class="status-badge ${sClass}">${i.status}</span></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
+        <div class="action-group">
+          <button onclick="openAct('data_izin', ${i.id}, '${i.status}', '${nm.replace(/'/g, "\\'")}')" class="btn-icon">⚙️ Kelola</button>
+          <button onclick="quickDelete('data_izin', ${i.id})" class="btn-icon btn-icon-del">🗑️ Hapus</button>
+        </div>
+      </div>`;
+    }); box.innerHTML = h + '</div>';
+  }
+
+  function isDateInIzinRange(dStr, mulai, akhir) {
+    if(!mulai) return false;
+    if(!akhir) akhir = mulai; 
+    return (dStr >= mulai && dStr <= akhir);
+  }
+
+  function renderDtI_Kal() {
+    const box = document.getElementById('boxDtIzinKal'); 
+    if(!box) return;
+    const curStr = getActiveMonthString();
+    
+    const days = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+    let fd = new Date(currentCalYear, currentCalMonth, 1).getDay(); fd = (fd === 0) ? 6 : fd - 1;
+    
+    let h = `<div class="calendar-controls"><button onclick="changeCalMonth(-1)">&#10094; Prev</button><div style="font-weight:800; font-size:14px; color:var(--primary-accent);">${curStr}</div><button onclick="changeCalMonth(1)">Next &#10095;</button></div><div class="calendar-grid">`;
+    for(let i=0; i<fd; i++) h += `<div class="cal-day" style="background:transparent; border:none;"></div>`;
+    
+    for(let d=1; d<=days; d++) {
+      const dStr = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const rec = state.izin.filter(x => isDateInIzinRange(dStr, x.tanggal_izin_mulai, x.tanggal_izin_akhir));
+      h += `<div class="cal-day ${rec.length > 0 ? 'has-data' : ''}" ${rec.length > 0 ? `onclick="openKalenderIzinModal('${dStr}')"` : ''}><span style="font-size:12px; font-weight:700;">${d}</span><span class="cal-badge ${rec.length>0 ? 'red' : 'zero'}">${rec.length}</span></div>`;
+    } 
+    box.innerHTML = h + `</div>`;
+  }
+
+  function openKalenderIzinModal(dateStr) {
+    const records = state.izin.filter(r => isDateInIzinRange(dateStr, r.tanggal_izin_mulai, r.tanggal_izin_akhir));
+    document.getElementById('kalenderModalTitle').innerText = `Izin: ${dateStr}`;
+    let html = '';
+    records.forEach(r => {
+      const nm = getNama(r);
+      let sClass = 'DISETUJUI';
+      if((r.status || '').includes('TIDAK') || r.status === 'DITOLAK') sClass = 'DITOLAK';
+      if(r.status === 'PENDING') sClass = 'PENDING';
+
+      html += `
+      <div style="padding: 12px 0; border-bottom: 1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">👤 ${nm} <span class="status-badge ${sClass}" style="margin-left:5px;">${r.status}</span></span>
+          <span style="font-size: 11px; color: var(--text-muted);">${r.kategori_izin} | ${r.tanggal_izin_mulai} s/d ${r.tanggal_izin_akhir}</span>
+        </div>
+        <div style="text-align:right;">
+          <button onclick="quickDelete('data_izin', ${r.id})" class="btn-icon btn-icon-del" style="width:fit-content; font-size:9px; padding:4px 8px;">🗑️ Hapus</button>
+        </div>
+      </div>`;
+    });
+    document.getElementById('kalenderModalContent').innerHTML = html;
+    document.getElementById('kalenderModal').style.display = 'flex';
+    setTimeout(() => { document.getElementById('kalenderModal').style.opacity = '1'; }, 10);
+  }
+
+  function renderDtL_Kal() {
+    const box = document.getElementById('boxDtLemburKal'); const curStr = getActiveMonthString();
+    const currData = state.lembur.filter(x => (x.bulan_lembur || '').trim() === curStr && x.status !== 'PENDING');
+    const days = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+    let fd = new Date(currentCalYear, currentCalMonth, 1).getDay(); fd = (fd === 0) ? 6 : fd - 1;
+    
+    let h = `<div class="calendar-controls"><button onclick="changeCalMonth(-1)">&#10094; Prev</button><div style="font-weight:800; font-size:14px; color:var(--primary-accent);">${curStr}</div><button onclick="changeCalMonth(1)">Next &#10095;</button></div><div class="calendar-grid">`;
+    for(let i=0; i<fd; i++) h += `<div class="cal-day" style="background:transparent; border:none;"></div>`;
+    for(let d=1; d<=days; d++) {
+      const dStr = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const rec = currData.filter(x => x.tanggal_lembur === dStr);
+      h += `<div class="cal-day ${rec.length > 0 ? 'has-data' : ''}" ${rec.length > 0 ? `onclick="openKalenderModal('${dStr}')"` : ''}><span style="font-size:12px; font-weight:700;">${d}</span><span class="cal-badge ${rec.length>0 ? 'red' : 'zero'}">${rec.length}</span></div>`;
+    } box.innerHTML = h + `</div>`;
+  }
+
+  function openKalenderModal(dateStr) {
+    const records = state.lembur.filter(r => r.tanggal_lembur === dateStr && r.status !== 'PENDING');
+    document.getElementById('kalenderModalTitle').innerText = `Lembur: ${dateStr}`;
+    let html = '';
+    records.forEach(r => {
+      const nm = getNama(r);
+      const isDitolak = r.status === 'DITOLAK';
+      const statusBadge = isDitolak ? '<span style="font-size:9px; background:rgba(239, 68, 68, 0.15); color:#f87171; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
+      const jamStyle = isDitolak ? 'text-decoration:line-through; color:var(--text-muted); background:transparent;' : 'color:#000; background:var(--primary-accent);';
+      
+      html += `
+      <div style="padding: 12px 0; border-bottom: 1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-main);">👤 ${nm} ${statusBadge}</span>
+          <button onclick="quickDelete('data_lembur', ${r.id})" class="btn-icon btn-icon-del" style="width:fit-content; font-size:9px; padding:4px 8px;">🗑️ Hapus</button>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; display:inline-block; margin-bottom:4px; ${jamStyle}">${formatTeksJam(r.durasi)}</div>
+          <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">${r.jam_awal} - ${r.jam_selesai}</div>
+        </div>
+      </div>`;
+    });
+    document.getElementById('kalenderModalContent').innerHTML = html;
+    document.getElementById('kalenderModal').style.display = 'flex';
+    setTimeout(() => { document.getElementById('kalenderModal').style.opacity = '1'; }, 10);
+  }
+
+  function renderDtL_Kar() {
+    const box = document.getElementById('boxDtLemburKar'); const curStr = getActiveMonthString();
+    const searchVal = document.getElementById('searchDtL_Kar').value.toLowerCase();
+    
+    const currData = state.lembur.filter(x => {
+      const nm = getNama(x).toLowerCase();
+      const idK = (x.id_karyawan || '').toLowerCase();
+      return (x.bulan_lembur || '').trim() === curStr && x.status !== 'PENDING' && (nm.includes(searchVal) || idK.includes(searchVal));
+    });
+    
+    if(currData.length === 0) { box.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Belum ada rekap lemburan di bulan ${curStr}.</div>`; return; }
+    
+    const grp = {};
+    currData.forEach(x => { 
+      const nm = getNama(x);
+      const dVal = parseFloat(x.durasi) || 0;
+      if(!grp[nm]) grp[nm] = { id: x.id_karyawan, rec: [], totalJam: 0 }; 
+      grp[nm].rec.push(x); 
+      if(x.status === 'DISETUJUI') { grp[nm].totalJam += dVal; }
+    });
+    
+    let h = '<div class="grid-2">'; let idx=0;
+    for(const n in grp) {
+      h += `
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc('opAcc-${idx}')">
+          <span>${n} <span style="font-size:10px;color:var(--text-muted);">#${grp[n].id}</span></span>
+          <span class="acc-badge">${formatTeksJam(grp[n].totalJam)}</span>
+        </div>
+        <div id="opAcc-${idx}" class="acc-body">`;
+      grp[n].rec.forEach(r => { 
+        const isDitolak = r.status === 'DITOLAK';
+        const statusBadge = isDitolak ? '<span style="font-size:9px; background:rgba(239, 68, 68, 0.15); color:#f87171; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
+        const durasiStyle = isDitolak ? 'text-decoration:line-through; color:var(--text-muted);' : 'color:var(--text-main);';
+
+        h += `
+        <div class="acc-row">
+          <div style="flex:1;"><span>📅 ${r.tanggal_lembur} <strong style="color:var(--primary-accent); font-size:10px;">(${r.jam_awal} - ${r.jam_selesai})</strong></span> ${statusBadge}</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong style="${durasiStyle}">${formatTeksJam(r.durasi)}</strong>
+            <button onclick="openAct('data_lembur', ${r.id}, '${r.status}', '${n.replace(/'/g, "\\'")}')" class="btn-icon">⚙️</button>
+            <button onclick="quickDelete('data_lembur', ${r.id})" class="btn-icon btn-icon-del">🗑️</button>
+          </div>
+        </div>`; 
+      });
+      h += `</div></div>`; idx++;
+    } box.innerHTML = h + '</div>';
+  }
+
+  function openAct(t, id, s, n) {
+    curT = t; curId = id; document.getElementById('actDesc').innerHTML = `Modifikasi data milik <strong>${n}</strong>.`; const sel = document.getElementById('actStatus');
+    if(t === 'data_izin') { sel.innerHTML = `<option value="IZIN DIBERIKAN" ${s==='IZIN DIBERIKAN'?'selected':''}>Setuju (Izin Diberikan)</option><option value="IZIN TIDAK DIBERIKAN" ${s==='IZIN TIDAK DIBERIKAN'?'selected':''}>Tolak (Izin Tidak Diberikan)</option><option value="PENDING" ${s==='PENDING'?'selected':''}>Pending</option>`; } 
+    else { sel.innerHTML = `<option value="DISETUJUI" ${s==='DISETUJUI'?'selected':''}>Setuju</option><option value="DITOLAK" ${s==='DITOLAK'?'selected':''}>Tolak</option><option value="PENDING" ${s==='PENDING'?'selected':''}>Pending</option>`; }
+    document.getElementById('actModal').style.display = 'flex'; setTimeout(() => document.getElementById('actModal').style.opacity = '1', 10);
+  }
+
+  async function saveAct() { await db.from(curT).update({ status: document.getElementById('actStatus').value }).eq('id', curId); closeModal('actModal'); showCustomAlert("Berhasil diperbarui!"); fetchAllData(); }
+
+  function renderDbIzin() {
+    const s = document.getElementById('searchDbIzin').value.toLowerCase(); const b = document.getElementById('filterBulanDbIzin').value; const box = document.getElementById('boxDbIzin');
+    
+    const filtered = state.izin.filter(x => {
+      const nm = getNama(x).toLowerCase();
+      const idK = (x.id_karyawan || '').toLowerCase();
+      return x.status !== 'PENDING' && (nm.includes(s) || idK.includes(s)) && (b === 'ALL' || getMonthStringFromDate(x.tanggal_izin_mulai) === b);
+    });
+
+    if(filtered.length === 0) { box.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Data tidak ditemukan.</div>'; return; }
+    
+    let h = '<div class="grid-2">';
+    filtered.forEach(i => {
+      const nm = getNama(i);
+      const sClass = (i.status || '').includes('TIDAK') ? 'DITOLAK' : 'DISETUJUI';
+      h += `
+      <div class="req-card">
+        <div class="req-header"><div class="req-title">${nm}</div><span class="status-badge ${sClass}">${i.status}</span></div>
+        <div class="req-body"><strong style="color:var(--text-main);">${i.kategori_izin}</strong><br>${i.tanggal_izin_mulai} s/d ${i.tanggal_izin_akhir}<br>"${i.alasan}"</div>
+        <div class="action-group">
+          <button onclick="quickDelete('data_izin', ${i.id})" class="btn-icon btn-icon-del">🗑️ Hapus Permanen</button>
+        </div>
+      </div>`;
+    }); box.innerHTML = h + '</div>';
+  }
+
+  function renderDbLembur() {
+    const s = document.getElementById('searchDbLembur').value.toLowerCase(); const b = document.getElementById('filterBulanDbLembur').value; const box = document.getElementById('boxDbLembur');
+    
+    const filtered = state.lembur.filter(x => {
+      const nm = getNama(x).toLowerCase();
+      const idK = (x.id_karyawan || '').toLowerCase();
+      return x.status !== 'PENDING' && (nm.includes(s) || idK.includes(s)) && (b === 'ALL' || (x.bulan_lembur || '').trim() === b);
+    });
+
+    if(filtered.length === 0) { box.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Data tidak ditemukan.</div>'; return; }
+    
+    const grp = {};
+    filtered.forEach(x => { 
+      const nm = getNama(x);
+      const dVal = parseFloat(x.durasi) || 0;
+      if(!grp[nm]) grp[nm] = { id: x.id_karyawan, rec: [], totalJam: 0 }; 
+      grp[nm].rec.push(x); 
+      if(x.status === 'DISETUJUI') { grp[nm].totalJam += dVal; }
+    });
+    
+    let h = '<div class="grid-2">'; let idx=0;
+    for(const n in grp) {
+      h += `
+      <div class="acc-item">
+        <div class="acc-header" onclick="toggleAcc('dbAcc-${idx}')">
+          <span>${n} <span style="font-size:10px;color:var(--text-muted);">#${grp[n].id}</span></span>
+          <span class="acc-badge">${formatTeksJam(grp[n].totalJam)}</span>
+        </div>
+        <div id="dbAcc-${idx}" class="acc-body">`;
+      grp[n].rec.forEach(r => { 
+        const isDitolak = r.status === 'DITOLAK';
+        const statusBadge = isDitolak ? '<span style="font-size:9px; background:rgba(239, 68, 68, 0.15); color:#f87171; padding:2px 6px; border-radius:4px; margin-left:5px;">DITOLAK</span>' : '';
+        const durasiStyle = isDitolak ? 'text-decoration:line-through; color:var(--text-muted);' : 'color:var(--text-main);';
+
+        h += `<div class="acc-row">
+          <span>📅 ${r.tanggal_lembur} <strong style="color:var(--primary-accent); font-size:10px;">(${r.jam_awal} - ${r.jam_selesai})</strong> ${statusBadge}</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <strong style="${durasiStyle}">${formatTeksJam(r.durasi)}</strong>
+            <button onclick="quickDelete('data_lembur', ${r.id})" class="btn-icon btn-icon-del">🗑️</button>
+          </div>
+        </div>`; 
+      });
+      h += `</div></div>`; idx++;
+    } box.innerHTML = h + '</div>';
+  }
+
+  // --- REVISI EKSPOR DATA MENGGUNAKAN SHEETJS (MULTI-SHEET) ---
+  function exportData(t) {
+    if (typeof XLSX === 'undefined') return showCustomAlert("Sistem sedang memuat komponen Excel, mohon tunggu beberapa detik dan coba lagi.");
+
+    let rawData = []; 
+    let summaryData = []; 
+    let fileName = "";
+    
+    const bulan = t === 'izin' ? document.getElementById('filterBulanDbIzin').value : document.getElementById('filterBulanDbLembur').value;
+    const searchVal = t === 'izin' ? document.getElementById('searchDbIzin').value.toLowerCase() : document.getElementById('searchDbLembur').value.toLowerCase();
+
+    if(t === 'izin') {
+      const filtered = state.izin.filter(x => {
+        const nm = getNama(x).toLowerCase();
+        const idK = (x.id_karyawan || '').toLowerCase();
+        return x.status !== 'PENDING' && (nm.includes(searchVal) || idK.includes(searchVal)) && (bulan === 'ALL' || getMonthStringFromDate(x.tanggal_izin_mulai) === bulan);
+      });
+      if(!filtered.length) return showCustomAlert("❌ Data kosong, tidak ada laporan yang bisa dicetak.");
+
+      // Sheet 1: Detail
+      rawData = filtered.map(i => ({
+        "ID Karyawan": i.id_karyawan, 
+        "Nama Karyawan": getNama(i), 
+        "Tgl Mulai": i.tanggal_izin_mulai, 
+        "Tgl Akhir": i.tanggal_izin_akhir, 
+        "Kategori": i.kategori_izin, 
+        "Alasan": i.alasan, 
+        "Status": i.status
+      }));
+      
+      // Sheet 2: Summary (Group By Name)
+      const grp = {};
+      filtered.forEach(x => {
+          const nm = getNama(x);
+          if(!grp[nm]) grp[nm] = { id: x.id_karyawan, disetujui: 0, ditolak: 0 };
+          if((x.status || '').includes('TIDAK') || x.status === 'DITOLAK') {
+              grp[nm].ditolak += 1;
+          } else {
+              grp[nm].disetujui += 1;
+          }
+      });
+      for(const n in grp) {
+        summaryData.push({
+            "ID Karyawan": grp[n].id, 
+            "Nama Karyawan": n, 
+            "Total Pengajuan Disetujui": grp[n].disetujui, 
+            "Total Pengajuan Ditolak": grp[n].ditolak
+        });
+      }
+      
+      fileName = `Laporan_Izin_Arasa_${bulan.replace(/\s/g, '_')}.xlsx`;
+
+    } else {
+      const filtered = state.lembur.filter(x => {
+        const nm = getNama(x).toLowerCase();
+        const idK = (x.id_karyawan || '').toLowerCase();
+        return x.status !== 'PENDING' && (nm.includes(searchVal) || idK.includes(searchVal)) && (bulan === 'ALL' || (x.bulan_lembur || '').trim() === bulan);
+      });
+      if(!filtered.length) return showCustomAlert("❌ Data kosong, tidak ada laporan yang bisa dicetak.");
+
+      // Sheet 1: Detail
+      rawData = filtered.map(l => ({
+        "ID Karyawan": l.id_karyawan, 
+        "Nama Karyawan": getNama(l), 
+        "Tanggal Lembur": l.tanggal_lembur, 
+        "Jam Awal": l.jam_awal, 
+        "Jam Selesai": l.jam_selesai, 
+        "Durasi (Jam)": parseFloat(l.durasi) || 0, 
+        "Alasan": l.alasan, 
+        "Bulan Rekap": l.bulan_lembur, 
+        "Status": l.status
+      }));
+      
+      // Sheet 2: Summary (Group by Name, Sum Duration)
+      const grp = {};
+      filtered.forEach(x => {
+          const nm = getNama(x);
+          const dVal = parseFloat(x.durasi) || 0;
+          if(!grp[nm]) grp[nm] = { id: x.id_karyawan, totalJamDisetujui: 0, totalJamDitolak: 0 };
+          if(x.status === 'DISETUJUI') {
+              grp[nm].totalJamDisetujui += dVal;
+          } else if(x.status === 'DITOLAK') {
+              grp[nm].totalJamDitolak += dVal;
+          }
+      });
+      
+      for(const n in grp) {
+        summaryData.push({
+            "ID Karyawan": grp[n].id, 
+            "Nama Karyawan": n, 
+            "Total Jam Disetujui": grp[n].totalJamDisetujui,
+            "Total Jam Ditolak": grp[n].totalJamDitolak
+        });
+      }
+      
+      fileName = `Laporan_Lembur_Arasa_${bulan.replace(/\s/g, '_')}.xlsx`;
+    }
+
+    // Eksekusi Pembuatan Excel
+    const wb = XLSX.utils.book_new();
+    const wsDetail = XLSX.utils.json_to_sheet(rawData);
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData);
+    
+    // Atur Lebar Kolom Biar Rapi
+    wsDetail['!cols'] = [{wch:15}, {wch:25}, {wch:15}, {wch:15}, {wch:15}, {wch:15}, {wch:30}, {wch:15}];
+    wsSummary['!cols'] = [{wch:15}, {wch:25}, {wch:25}, {wch:25}];
+
+    XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Data");
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Rangkuman Karyawan");
+    
+    XLSX.writeFile(wb, fileName);
+  }
+
+  function renderKaryawan() {
+    const box = document.getElementById('boxListKaryawan'); 
+    let h = '<div class="grid-2">';
+    state.master.forEach(m => {
+      const safenm = (m.nama_karyawan || 'Tanpa Nama').replace(/'/g, "\\'");
+      h += `
+      <div class="req-card" style="display:flex; justify-content:space-between; align-items:center;">
+        <div><strong style="color:var(--text-main);">${m.nama_karyawan}</strong><br><span style="font-size:11px; color:var(--text-muted);">ID: #${m.id_karyawan}</span></div>
+        <div style="display:flex; gap:8px;"><button onclick="openKarModal('UPDATE', '${m.id_karyawan}', '${safenm}')" class="btn-icon">Edit</button><button onclick="deleteKaryawan('${m.id_karyawan}')" class="btn-icon btn-icon-del">Hapus</button></div>
+      </div>`;
+    }); box.innerHTML = h + '</div>';
+  }
+
+  function openKarModal(mode, id = '', nama = '') { document.getElementById('karTitle').innerText = mode === 'ADD' ? 'Tambah Karyawan' : 'Edit Karyawan'; document.getElementById('kId').value = id; document.getElementById('kNm').value = nama; document.getElementById('kId').disabled = mode === 'UPDATE'; document.getElementById('karModal').style.display = 'flex'; setTimeout(() => document.getElementById('karModal').style.opacity = '1', 10); }
+  async function saveKar() { const id = document.getElementById('kId').value; const nm = document.getElementById('kNm').value; if(!id || !nm) return showCustomAlert("ID dan Nama wajib diisi!"); await db.from('master_data').upsert({ id_karyawan: id, nama_karyawan: nm }); closeModal('karModal'); showCustomAlert("Data Karyawan tersimpan!"); fetchAllData(); }
+  function deleteKaryawan(id) { showCustomConfirm(`Yakin ingin menghapus permanen karyawan ID #${id}?`, async () => { await db.from('master_data').delete().eq('id_karyawan', id); showCustomAlert("Karyawan berhasil dihapus!"); fetchAllData(); }); }
+</script>
+</body>
+</html>
