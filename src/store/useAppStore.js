@@ -35,10 +35,10 @@ export const useAppStore = create((set, get) => ({
   },
 
   // --- CRUD Karyawan ---
-  addKaryawan: async ({ id_karyawan, nama_karyawan, jabatan, departemen, nik_ktp, no_hp, tgl_gabung }) => {
+  addKaryawan: async ({ id_karyawan, nama_karyawan, jabatan, departemen, nik_ktp, no_hp, tgl_gabung, jatah_cuti }) => {
     const { error } = await supabase
       .from('master_data')
-      .insert({ id_karyawan, nama_karyawan, jabatan, departemen, nik_ktp, no_hp, tgl_gabung });
+      .insert({ id_karyawan, nama_karyawan, jabatan, departemen, nik_ktp, no_hp, tgl_gabung, jatah_cuti: jatah_cuti ?? 12 });
     if (error) throw error;
     await get().fetchAll();
   },

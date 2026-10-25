@@ -15,6 +15,7 @@ CREATE TABLE public.master_data (
   no_hp character varying,
   alamat_domisili text,
   status_nikah character varying,
+  jatah_cuti integer DEFAULT 12,
   kontak_darurat character varying,
   CONSTRAINT master_data_pkey PRIMARY KEY (id_karyawan)
 );
