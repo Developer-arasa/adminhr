@@ -1570,3 +1570,99 @@ textarea::placeholder {
   color: var(--text-main);
   margin-top: 6px;
 }
+
+/* ===== Papan Informasi (Pengumuman) ===== */
+.announce-panel {
+  margin-bottom: 20px;
+}
+.announce-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.announce-form .grid-2 {
+  gap: 12px;
+}
+.announce-form .req {
+  color: var(--danger);
+}
+.announce-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.announce-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.announce-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: 0.15s;
+}
+.announce-item:hover {
+  border-color: var(--border-strong);
+}
+.announce-body {
+  min-width: 0;
+}
+.announce-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.announce-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.announce-badge.INFO {
+  background: var(--info-soft);
+  color: var(--info);
+}
+.announce-badge.PENTING {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.announce-badge.EVENT {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.announce-date {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.announce-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+.announce-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.announce-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}

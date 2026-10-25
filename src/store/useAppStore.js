@@ -6,26 +6,30 @@ export const useAppStore = create((set, get) => ({
   master: [],
   izin: [],
   lembur: [],
+  pengumuman: [],
   loading: false,
   error: null,
 
   fetchAll: async () => {
     set({ loading: true, error: null });
     try {
-      const [resMaster, resIzin, resLembur] = await Promise.all([
+      const [resMaster, resIzin, resLembur, resPengumuman] = await Promise.all([
         supabase.from('master_data').select('*').order('nama_karyawan'),
         supabase.from('data_izin').select('*').order('created_at', { ascending: false }),
         supabase.from('data_lembur').select('*').order('tanggal_lembur', { ascending: false }),
+        supabase.from('data_pengumuman').select('*').order('tanggal', { ascending: false }),
       ]);
 
       if (resMaster.error) throw resMaster.error;
       if (resIzin.error) throw resIzin.error;
       if (resLembur.error) throw resLembur.error;
+      if (resPengumuman.error) throw resPengumuman.error;
 
       set({
         master: resMaster.data || [],
         izin: resIzin.data || [],
         lembur: resLembur.data || [],
+        pengumuman: resPengumuman.data || [],
         loading: false,
       });
     } catch (err) {
@@ -93,6 +97,38 @@ export const useAppStore = create((set, get) => ({
 
   deleteRecord: async (table, id) => {
     const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) throw error;
+    await get().fetchAll();
+  },
+
+  // --- Pengumuman (Papan Informasi) ---
+  addPengumuman: async ({ judul, isi_pesan, label_kategori, tanggal }) => {
+    const { error } = await supabase.from('data_pengumuman').insert({
+      judul,
+      isi_pesan: isi_pesan ?? null,
+      label_kategori: label_kategori ?? 'Info',
+      tanggal: tanggal || null,
+    });
+    if (error) throw error;
+    await get().fetchAll();
+  },
+
+  updatePengumuman: async (id, { judul, isi_pesan, label_kategori, tanggal }) => {
+    const { error } = await supabase
+      .from('data_pengumuman')
+      .update({
+        judul,
+        isi_pesan: isi_pesan ?? null,
+        label_kategori: label_kategori ?? 'Info',
+        tanggal: tanggal || null,
+      })
+      .eq('id', id);
+    if (error) throw error;
+    await get().fetchAll();
+  },
+
+  deletePengumuman: async (id) => {
+    const { error } = await supabase.from('data_pengumuman').delete().eq('id', id);
     if (error) throw error;
     await get().fetchAll();
   },
