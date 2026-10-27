@@ -240,8 +240,13 @@ export default function Karyawan() {
       tgl_gabung: m.tgl_gabung || '',
       jatah_cuti: m.jatah_cuti ?? 12,
     });
-    setModal({ mode: 'EDIT', originalId: m.id_karyawan });
+    // Tutup Modal Detail lebih dulu, lalu buka Modal Edit pada tick berikutnya
+    // agar event click yang sama tidak "menetes" ke overlay Modal Edit (yang
+    // membuatnya langsung tertutup karena e.target === e.currentTarget).
     setSelected(null);
+    setTimeout(() => {
+      setModal({ mode: 'EDIT', originalId: m.id_karyawan });
+    }, 0);
   };
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));

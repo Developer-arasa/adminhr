@@ -48,24 +48,27 @@ export const useAppStore = create((set, get) => ({
   },
 
   updateKaryawan: async (originalId, payload) => {
-    // Jika ID berubah: hapus baris lama, lalu insert baris baru.
-    if (originalId !== payload.id_karyawan) {
-      const { error: delErr } = await supabase
-        .from('master_data')
-        .delete()
-        .eq('id_karyawan', originalId);
-      if (delErr) throw delErr;
+    const { id_karyawan: newId, ...rest } = payload;
+    const idChanged = originalId !== newId;
 
-      const { error: insErr } = await supabase.from('master_data').insert(payload);
-      if (insErr) throw insErr;
-    } else {
-      const { id_karyawan, ...rest } = payload;
-      const { error } = await supabase
-        .from('master_data')
-        .update(rest)
-        .eq('id_karyawan', originalId);
-      if (error) throw error;
+    // 1. Update baris master_data (tetap di baris yang sama, tidak delete+insert).
+    const { error } = await supabase
+      .from('master_data')
+      .update({ id_karyawan: newId, ...rest })
+      .eq('id_karyawan', originalId);
+    if (error) throw error;
+
+    // 2. Jika ID berubah, ikut perbarui referensi id_karyawan di tabel anak
+    //    agar data lembur & izin tetap tersambung (tidak menjadi yatim).
+    if (idChanged) {
+      const [resIzin, resLembur] = await Promise.all([
+        supabase.from('data_izin').update({ id_karyawan: newId }).eq('id_karyawan', originalId),
+        supabase.from('data_lembur').update({ id_karyawan: newId }).eq('id_karyawan', originalId),
+      ]);
+      if (resIzin.error) throw resIzin.error;
+      if (resLembur.error) throw resLembur.error;
     }
+
     await get().fetchAll();
   },
 
