@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { normalizeStatus } from '../lib/utils';
+import { sendWhatsApp } from '../lib/whatsapp';
 
 export const useAppStore = create((set, get) => ({
   master: [],
@@ -82,6 +83,24 @@ export const useAppStore = create((set, get) => ({
   updateStatus: async (table, id, status) => {
     const { error } = await supabase.from(table).update({ status }).eq('id', id);
     if (error) throw error;
+
+    // Notifikasi WhatsApp khusus untuk izin/cuti.
+    if (table === 'data_izin') {
+      const rec = get().izin.find((i) => i.id === id);
+      if (rec) {
+        const karyawan = get().master.find((m) => m.id_karyawan === rec.id_karyawan);
+        const nama = karyawan?.nama_karyawan || rec.nama || 'Karyawan';
+        const phone = karyawan?.no_hp || '';
+        const kategori = rec.kategori_izin || 'Izin';
+        const tgl = `${rec.tanggal_izin_mulai || '-'} s/d ${rec.tanggal_izin_akhir || '-'}`;
+        const keputusan =
+          normalizeStatus(status) === 'APPROVED' ? 'DISETUJUI ✅' : 'DITOLAK ❌';
+        const msg = `Halo ${nama},\n\nPengajuan izin/cuti kamu (${kategori}) tanggal ${tgl} telah ${keputusan}.\n\nTerima kasih.`;
+        // Fire-and-forget: jangan blokir alur approval.
+        sendWhatsApp(phone, msg);
+      }
+    }
+
     await get().fetchAll();
   },
 

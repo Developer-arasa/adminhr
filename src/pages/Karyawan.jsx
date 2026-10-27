@@ -94,7 +94,7 @@ function Ring({ value, max, size = 72, stroke = 9, color = 'var(--primary)', tra
 }
 
 export default function Karyawan() {
-  const { master, izin, lembur, addKaryawan, updateKaryawan, deleteKaryawan, updateStatus, deleteRecord } = useAppStore();
+  const { master, izin, lembur, addKaryawan, updateKaryawan, deleteKaryawan, deleteRecord } = useAppStore();
   const notify = useToast();
 
   const [mainTab, setMainTab] = useState('induk');
@@ -113,11 +113,9 @@ export default function Karyawan() {
 
   // state untuk management lembur
   const [lSearch, setLSearch] = useState('');
-  const [lStatus, setLStatus] = useState('ALL');
 
   // state untuk management izin/cuti
   const [iSearch, setISearch] = useState('');
-  const [iStatus, setIStatus] = useState('ALL');
   const [editJatah, setEditJatah] = useState(null); // { id, val }
 
   const filtered = master.filter((m) => {
@@ -197,7 +195,7 @@ export default function Karyawan() {
       const match =
         (l.nama || '').toLowerCase().includes(q) ||
         (l.id_karyawan || '').toLowerCase().includes(q);
-      const statusOk = lStatus === 'ALL' || normalizeStatus(l.status) === lStatus;
+      const statusOk = normalizeStatus(l.status) === 'APPROVED';
       return match && statusOk;
     });
 
@@ -215,7 +213,7 @@ export default function Karyawan() {
     }
     groups.sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
     return groups;
-  }, [lembur, lSearch, lStatus]);
+  }, [lembur, lSearch]);
 
   const lemburAgg = useMemo(() => {
     const totalJam = lembur.reduce((s, l) => s + (parseFloat(l.durasi) || 0), 0);
@@ -305,15 +303,6 @@ export default function Karyawan() {
 
   const select = (m) => {
     setSelected(m);
-  };
-
-  const handleUpdateStatus = async (table, id, status) => {
-    try {
-      await updateStatus(table, id, status);
-      notify('Status diperbarui.');
-    } catch (e) {
-      notify('Gagal memperbarui status.');
-    }
   };
 
   const handleDeleteRecord = async (table, id) => {
@@ -427,12 +416,6 @@ export default function Karyawan() {
                 value={lSearch}
                 onChange={(e) => setLSearch(e.target.value)}
               />
-              <select value={lStatus} onChange={(e) => setLStatus(e.target.value)}>
-                <option value="ALL">Semua Status</option>
-                <option value="PENDING">Menunggu</option>
-                <option value="APPROVED">Disetujui</option>
-                <option value="REJECTED">Ditolak</option>
-              </select>
             </div>
 
             {groupedLembur.length === 0 ? (
@@ -483,16 +466,6 @@ export default function Karyawan() {
                               </div>
                               {l.alasan && <div className="riwayat-alasan">{l.alasan}</div>}
                               <div className="riwayat-actions">
-                                {normalizeStatus(l.status) === 'PENDING' && (
-                                  <>
-                                    <button className="btn btn-primary btn-sm" onClick={() => handleUpdateStatus('data_lembur', l.id, 'DISETUJUI')}>
-                                      Setujui
-                                    </button>
-                                    <button className="btn btn-reject btn-sm" onClick={() => handleUpdateStatus('data_lembur', l.id, 'DITOLAK')}>
-                                      Tolak
-                                    </button>
-                                  </>
-                                )}
                                 <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteRecord('data_lembur', l.id)}>
                                   Hapus
                                 </button>
@@ -520,12 +493,6 @@ export default function Karyawan() {
                 value={iSearch}
                 onChange={(e) => setISearch(e.target.value)}
               />
-              <select value={iStatus} onChange={(e) => setIStatus(e.target.value)}>
-                <option value="ALL">Semua Status</option>
-                <option value="PENDING">Menunggu</option>
-                <option value="APPROVED">Disetujui</option>
-                <option value="REJECTED">Ditolak</option>
-              </select>
             </div>
             <h3 className="detail-section" style={{ marginTop: 0 }}>Analitik Cuti Tahunan ({thisYear})</h3>
             <div className="cuti-analytics">
@@ -620,7 +587,7 @@ export default function Karyawan() {
                         <div className="riwayat-list jatah-riwayat">
                           {(() => {
                             const items = (izinByKaryawan.get(r.id_karyawan) || []).filter(
-                              (i) => iStatus === 'ALL' || normalizeStatus(i.status) === iStatus
+                              (i) => normalizeStatus(i.status) === 'APPROVED'
                             );
                             if (items.length === 0) {
                               return <div className="empty" style={{ padding: 12 }}>Belum ada riwayat izin/cuti.</div>;
@@ -636,16 +603,6 @@ export default function Karyawan() {
                                 </div>
                                 {i.alasan && <div className="riwayat-alasan">{i.alasan}</div>}
                                 <div className="riwayat-actions">
-                                  {normalizeStatus(i.status) === 'PENDING' && (
-                                    <>
-                                      <button className="btn btn-primary btn-sm" onClick={() => handleUpdateStatus('data_izin', i.id, 'IZIN_DIBERIKAN')}>
-                                        Setujui
-                                      </button>
-                                      <button className="btn btn-reject btn-sm" onClick={() => handleUpdateStatus('data_izin', i.id, 'IZIN_TIDAK_DIBERIKAN')}>
-                                        Tolak
-                                      </button>
-                                    </>
-                                  )}
                                   <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteRecord('data_izin', i.id)}>
                                     Hapus
                                   </button>
