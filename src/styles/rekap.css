@@ -1,0 +1,916 @@
+/* =========================================================
+   REKAP & ANALYTICS HR DESIGN SYSTEM (Multinational Enterprise)
+   Theme: Pastel Violet / Indigo Modern Executive Portal
+   ========================================================= */
+
+.rekap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =========================================================
+   1. Executive Header & Export Action Hub
+   ========================================================= */
+.rekap-header-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fbfaff 60%, #f3eeff 100%);
+  border: 1px solid rgba(221, 214, 254, 0.7);
+  border-radius: var(--radius-2xl);
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.rekap-header-card::after {
+  content: '';
+  position: absolute;
+  right: -50px;
+  bottom: -50px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.18) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+}
+
+.rekap-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 240px;
+}
+
+.rekap-title-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary-gradient);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 22px -4px rgba(124, 58, 237, 0.4);
+  flex-shrink: 0;
+}
+
+.rekap-title-text h1 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  margin: 0 0 4px;
+}
+
+.rekap-title-text p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.rekap-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  z-index: 2;
+}
+
+.btn-export-main {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 6px 18px -2px rgba(124, 58, 237, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-export-main:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -2px rgba(124, 58, 237, 0.45);
+}
+
+.btn-export-sub {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1px solid #ddd6fe;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-export-sub:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   2. Executive KPI Ribbon (4 Metric Cards)
+   ========================================================= */
+.rekap-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.rekap-kpi-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.rekap-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.08);
+  border-color: #ddd6fe;
+}
+
+.rekap-kpi-icon-bubble {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rekap-kpi-icon-bubble.indigo {
+  background: #ede9fe;
+  color: var(--primary);
+}
+
+.rekap-kpi-icon-bubble.emerald {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.rekap-kpi-icon-bubble.amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.rekap-kpi-icon-bubble.blue {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.rekap-kpi-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rekap-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-faint);
+}
+
+.rekap-kpi-value {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.rekap-kpi-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   3. Smart Multinational Filter Bar
+   ========================================================= */
+.rekap-filter-panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Preset quick chips */
+.rekap-preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.rekap-presets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-chip {
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 13px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.preset-chip:hover {
+  background: #ede9fe;
+  color: var(--primary);
+  border-color: #ddd6fe;
+}
+
+.preset-chip.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.25);
+}
+
+.rekap-period-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Filter controls row */
+.rekap-controls-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr 1fr 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-icon-left {
+  position: absolute;
+  left: 12px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+  color: var(--text-main);
+  transition: all 0.15s ease;
+}
+
+.filter-input:focus {
+  background: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  outline: none;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.filter-select:focus {
+  background: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.filter-reset-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.filter-reset-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* =========================================================
+   4. View Segmented Tabs & Active Results Bar
+   ========================================================= */
+.rekap-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rekap-segmented {
+  display: inline-flex;
+  background: #ede9fe;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  gap: 4px;
+}
+
+.rekap-tab-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.rekap-tab-btn:hover {
+  color: var(--primary);
+}
+
+.rekap-tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.15);
+}
+
+.rekap-tab-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: #ede9fe;
+  color: var(--primary);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.rekap-tab-btn.active .rekap-tab-count {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.rekap-active-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.rekap-sort-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  background: #ffffff;
+  color: var(--text-main);
+}
+
+/* =========================================================
+   5. Enterprise Data Tables (Desktop Mode)
+   ========================================================= */
+.rekap-table-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  overflow: hidden;
+}
+
+.rekap-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.rekap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.rekap-table thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.rekap-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.rekap-table tbody tr:hover {
+  background: #fbfaff;
+}
+
+.rekap-table tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.rekap-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Employee Column In Table */
+.table-emp-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+}
+
+.table-emp-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--primary-gradient);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.table-emp-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-emp-name {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.table-emp-id {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Department Chip */
+.dept-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* Health status pills for leave balance */
+.balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.balance-pill.safe {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.balance-pill.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.balance-pill.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Potong cuti chip */
+.potong-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.potong-chip.ya {
+  background: #ede9fe;
+  color: var(--primary);
+  border: 1px solid #ddd6fe;
+}
+
+.potong-chip.tidak {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+/* Table action button */
+.btn-table-action {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--primary);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-table-action:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+
+/* =========================================================
+   6. Mobile Card List (Hidden on desktop)
+   ========================================================= */
+.rekap-mobile-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rekap-card-item {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.rekap-card-item:hover {
+  border-color: #ddd6fe;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.06);
+}
+
+.rekap-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rekap-card-emp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rekap-card-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.rekap-card-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.rekap-card-stat-label {
+  font-size: 10px;
+  color: var(--text-faint);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.rekap-card-stat-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.rekap-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* =========================================================
+   7. Department Analytics Widget (Tab 4)
+   ========================================================= */
+.rekap-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.analytics-widget-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: 20px 22px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.analytics-widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.analytics-widget-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dept-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dept-rank-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dept-rank-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.dept-rank-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.dept-rank-val {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.dept-rank-bar-bg {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.dept-rank-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary-gradient);
+  transition: width 0.4s ease;
+}
+
+/* =========================================================
+   8. Employee Drilldown Modal Styling
+   ========================================================= */
+.drilldown-modal-box {
+  max-width: 760px !important;
+  padding: 24px !important;
+}
+
+.drilldown-hero {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: var(--radius-xl);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.drilldown-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.drilldown-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--primary-gradient);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  box-shadow: 0 6px 16px -2px rgba(124, 58, 237, 0.35);
+  flex-shrink: 0;
+}
+
+.drilldown-hero-title h4 {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.drilldown-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.drilldown-stat-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drilldown-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.drilldown-stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+/* =========================================================
+   9. Responsive Breakpoints
+   ========================================================= */
+@media (max-width: 1024px) {
+  .rekap-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rekap-controls-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .rekap-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .rekap-table-card {
+    display: none; /* Hide wide table on mobile */
+  }
+  .rekap-mobile-cards {
+    display: flex; /* Show responsive card list on mobile */
+  }
+  .rekap-header-card {
+    padding: 18px;
+  }
+  .rekap-title-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+  .rekap-title-text h1 {
+    font-size: 20px;
+  }
+  .rekap-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .rekap-kpi-card {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .rekap-kpi-icon-bubble {
+    width: 36px;
+    height: 36px;
+  }
+  .rekap-kpi-value {
+    font-size: 18px;
+  }
+  .rekap-controls-row {
+    grid-template-columns: 1fr;
+  }
+  .rekap-segmented {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .rekap-tab-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+  .drilldown-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

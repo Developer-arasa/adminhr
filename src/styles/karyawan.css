@@ -1,0 +1,707 @@
+/* =========================================================
+   KARYAWAN PAGE & STRUCTURED DETAIL MODAL DESIGN SYSTEM
+   ========================================================= */
+
+.karyawan-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* =========================================================
+   1. Overview Metrics (4 Quick Pills on Top)
+   ========================================================= */
+.karyawan-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.k-metric-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all var(--transition);
+}
+
+.k-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--border-strong);
+}
+
+.k-metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.k-metric-val {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.k-metric-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* =========================================================
+   2. Search & Filter Bar with Horizontal Department Chips
+   ========================================================= */
+.karyawan-toolbar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-card);
+}
+
+.karyawan-search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.karyawan-search-box {
+  flex: 1;
+  min-width: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.karyawan-search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+
+.karyawan-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: 13px;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.karyawan-search-input:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.karyawan-sort-select {
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.karyawan-sort-select:hover {
+  border-color: var(--border-strong);
+  background: #ffffff;
+}
+
+/* Horizontal Department Chips (iOS/Reference Style) */
+.dept-chips-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.dept-chips-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.dept-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.dept-chip-btn:hover {
+  border-color: var(--primary-ring);
+  color: var(--primary);
+  background: #ffffff;
+}
+
+.dept-chip-btn.active {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  border-color: var(--primary);
+  font-weight: 700;
+}
+
+/* =========================================================
+   3. Modern Employee Cards Grid
+   ========================================================= */
+.karyawan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+
+.karyawan-card-modern {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.04);
+  transition: all var(--transition);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  text-align: left;
+}
+
+.karyawan-card-modern:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px -4px rgba(124, 58, 237, 0.12);
+  border-color: var(--primary-ring);
+}
+
+.karyawan-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.karyawan-avatar-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+
+.karyawan-card-modern:hover .karyawan-avatar-circle {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+.karyawan-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.karyawan-card-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.karyawan-card-job {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.karyawan-card-id {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-strong);
+  background: var(--primary-soft);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  margin-top: 4px;
+}
+
+/* Micro badges inside employee card */
+.karyawan-card-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.k-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.k-chip-cuti {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.k-chip-lembur {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.k-chip-dept {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* =========================================================
+   4. STRUCTURED DETAIL MODAL (Spacious & Clean)
+   ========================================================= */
+.emp-detail-modal-box {
+  max-width: 800px !important;
+  padding: 24px !important;
+}
+
+.emp-detail-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Hero Header in Detail Modal */
+.emp-detail-hero {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: var(--radius-xl);
+  padding: 18px 48px 18px 20px; /* Right padding accommodates the X close button cleanly */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.emp-detail-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.emp-detail-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary-gradient);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  box-shadow: 0 8px 20px -4px rgba(124, 58, 237, 0.35);
+  flex-shrink: 0;
+}
+
+.emp-detail-hero-title h3 {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin: 0 0 4px;
+  padding-right: 0 !important;
+}
+
+.emp-detail-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.emp-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Detail Tabs (Pill Controls - Spacious & No Overflow Cut) */
+.emp-detail-nav {
+  display: flex;
+  background: #f1f3f9;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.emp-detail-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.emp-detail-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.emp-detail-tab-btn:hover {
+  color: var(--text-main);
+}
+
+.emp-detail-tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.12);
+}
+
+/* Tab 1: Biodata & Profil (2 Spacious Columns) */
+.emp-biodata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.emp-info-card {
+  background: #f8f9fd;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emp-info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-strong);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.emp-kv-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.emp-kv-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.emp-kv-val {
+  font-weight: 600;
+  color: var(--text-main);
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Tab 2: Saldo & Riwayat Cuti */
+.emp-cuti-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.emp-cuti-pill {
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.emp-cuti-pill.blue {
+  background: #e0f2fe;
+  border: 1px solid #bfdbfe;
+}
+.emp-cuti-pill.amber {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+}
+.emp-cuti-pill.emerald {
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+}
+
+.emp-cuti-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.emp-cuti-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+/* History Filtering Toolbar inside modal */
+.history-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.history-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* History Feed List inside Modal */
+.emp-history-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.emp-history-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.emp-history-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.emp-history-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.emp-history-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.emp-tag-potong {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.emp-tag-potong.potong {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.emp-tag-potong.bebas {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.emp-history-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.emp-history-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.emp-history-alasan {
+  font-size: 12px;
+  color: var(--text-main);
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Tab 3: Lembur Summary & List */
+.emp-lembur-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.emp-lembur-pill {
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.emp-lembur-pill.purple {
+  background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+  border: 1px solid #c7d2fe;
+}
+
+.emp-lembur-pill.blue {
+  background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+}
+
+/* =========================================================
+   5. RESPONSIVE MOBILE BREAKPOINTS (Clean iOS Style)
+   ========================================================= */
+@media (max-width: 860px) {
+  .karyawan-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .k-metric-card {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .k-metric-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .k-metric-val {
+    font-size: 20px;
+  }
+
+  .emp-biodata-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emp-detail-hero {
+    padding: 16px 40px 16px 14px;
+    gap: 12px;
+  }
+
+  .emp-detail-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 600px) {
+  .karyawan-container {
+    gap: 14px;
+  }
+
+  .karyawan-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .karyawan-card-modern {
+    padding: 14px 14px;
+    border-radius: 18px;
+  }
+
+  .emp-cuti-summary {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .emp-cuti-pill {
+    padding: 8px 6px;
+  }
+
+  .emp-cuti-val {
+    font-size: 16px;
+  }
+
+  .emp-detail-tab-btn {
+    font-size: 11px;
+    padding: 7px 10px;
+  }
+
+  .emp-detail-modal-box {
+    padding: 16px 14px !important;
+    border-radius: 20px !important;
+    max-height: calc(100dvh - 24px) !important;
+  }
+}

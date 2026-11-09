@@ -6,6 +6,10 @@ import { useAppStore } from './store/useAppStore';
 import './styles/theme.css';
 import './styles/layout.css';
 import './styles/components.css';
+import './styles/dashboard.css';
+import './styles/approval.css';
+import './styles/karyawan.css';
+import './styles/rekap.css';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Approval = lazy(() => import('./pages/Approval'));

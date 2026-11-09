@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
 import StatusBadge from '../components/StatusBadge';
 import Modal from '../components/Modal';
-import { getNama, MONTH_NAMES } from '../lib/utils';
+import { getNama, MONTH_NAMES, formatTanggal, formatRentangJam, formatTeksJam } from '../lib/utils';
 
 const DOW = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
@@ -244,7 +244,7 @@ export default function Kalender() {
       </div>
 
       {selected && (
-        <Modal title={`Detail ${selected}`} onClose={() => setSelected(null)}>
+        <Modal title={`Detail Pengajuan — ${formatTanggal(selected, 'full')}`} onClose={() => setSelected(null)}>
           {selectedEvents.length === 0 ? (
             <div className="empty">Tidak ada pengajuan pada tanggal ini.</div>
           ) : agendaFilter ? (
@@ -259,13 +259,13 @@ export default function Kalender() {
                         <div>
                           <div className="req-title">⏰ {getNama(ev.data, master)}</div>
                           <div className="req-meta">
-                            {ev.data.jam_awal || ''} - {ev.data.jam_selesai || ''}
+                            {formatRentangJam(ev.data.jam_awal, ev.data.jam_selesai)}
                           </div>
                         </div>
                         <StatusBadge status={ev.data.status} />
                       </div>
                       {ev.data.durasi && (
-                        <div className="req-meta">Durasi: {ev.data.durasi}</div>
+                        <div className="req-meta">Durasi: {formatTeksJam(ev.data.durasi)}</div>
                       )}
                     </div>
                   ))
@@ -314,13 +314,13 @@ export default function Kalender() {
                         <div>
                           <div className="req-title">⏰ {getNama(ev.data, master)}</div>
                           <div className="req-meta">
-                            {ev.data.jam_awal || ''} - {ev.data.jam_selesai || ''}
+                            {formatRentangJam(ev.data.jam_awal, ev.data.jam_selesai)}
                           </div>
                         </div>
                         <StatusBadge status={ev.data.status} />
                       </div>
                       {ev.data.durasi && (
-                        <div className="req-meta">Durasi: {ev.data.durasi}</div>
+                        <div className="req-meta">Durasi: {formatTeksJam(ev.data.durasi)}</div>
                       )}
                     </div>
                   ))

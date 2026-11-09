@@ -40,10 +40,13 @@ export const useAppStore = create((set, get) => ({
   },
 
   // --- CRUD Karyawan ---
-  addKaryawan: async ({ id_karyawan, nama_karyawan, jabatan, departemen, nik_ktp, no_hp, tgl_gabung, jatah_cuti }) => {
+  addKaryawan: async (payload) => {
     const { error } = await supabase
       .from('master_data')
-      .insert({ id_karyawan, nama_karyawan, jabatan, departemen, nik_ktp, no_hp, tgl_gabung, jatah_cuti: jatah_cuti ?? 12 });
+      .insert({
+        ...payload,
+        jatah_cuti: payload.jatah_cuti ?? 12,
+      });
     if (error) throw error;
     await get().fetchAll();
   },
@@ -80,8 +83,13 @@ export const useAppStore = create((set, get) => ({
   },
 
   // --- Approval ---
-  updateStatus: async (table, id, status) => {
-    const { error } = await supabase.from(table).update({ status }).eq('id', id);
+  updateStatus: async (table, id, status, extra = {}) => {
+    const updatePayload = { status };
+    if (table === 'data_izin' && extra.alasanBaru !== undefined) {
+      updatePayload.alasan = extra.alasanBaru;
+    }
+
+    const { error } = await supabase.from(table).update(updatePayload).eq('id', id);
     if (error) throw error;
 
     // Notifikasi WhatsApp khusus untuk izin/cuti.
@@ -95,7 +103,15 @@ export const useAppStore = create((set, get) => ({
         const tgl = `${rec.tanggal_izin_mulai || '-'} s/d ${rec.tanggal_izin_akhir || '-'}`;
         const keputusan =
           normalizeStatus(status) === 'APPROVED' ? 'DISETUJUI ✅' : 'DITOLAK ❌';
-        const msg = `Halo ${nama},\n\nPengajuan izin/cuti kamu (${kategori}) tanggal ${tgl} telah ${keputusan}.\n\nTerima kasih.`;
+
+        const potongNote =
+          normalizeStatus(status) === 'APPROVED' && extra.potongHari !== undefined
+            ? extra.potongHari > 0
+              ? `\nℹ️ Catatan: Memotong ${extra.potongHari} hari jatah cuti tahunan.`
+              : `\nℹ️ Catatan: Izin disetujui tanpa pemotongan saldo cuti tahunan.`
+            : '';
+
+        const msg = `Halo ${nama},\n\nPengajuan izin/cuti kamu (${kategori}) tanggal ${tgl} telah ${keputusan}.${potongNote}\n\nTerima kasih.`;
         // Fire-and-forget: jangan blokir alur approval.
         sendWhatsApp(phone, msg);
       }

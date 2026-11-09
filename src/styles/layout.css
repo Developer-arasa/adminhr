@@ -1,103 +1,247 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
+  position: relative;
+  background: var(--bg-body);
 }
 
-/* ===== Sidebar (desktop) ===== */
+/* =========================================================
+   Sidebar (Desktop)
+   ========================================================= */
 .sidebar {
-  width: 248px;
+  width: 260px;
   flex-shrink: 0;
   background: var(--bg-surface);
   border-right: 1px solid var(--border);
-  padding: 24px 16px;
+  padding: 24px 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   position: sticky;
   top: 0;
   height: 100vh;
+  z-index: 30;
+  box-shadow: 1px 0 20px rgba(124, 58, 237, 0.02);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 4px 8px 20px;
-  margin-bottom: 8px;
+  padding: 4px 6px 20px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--border);
 }
 
 .brand-mark {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius);
+  background: var(--primary-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #ffffff;
   font-weight: 800;
-  font-size: 18px;
   flex-shrink: 0;
+  box-shadow: 0 8px 20px -4px rgba(124, 58, 237, 0.4);
+  transition: transform var(--transition);
 }
 
-.brand h1 {
-  font-size: 17px;
+.brand:hover .brand-mark {
+  transform: scale(1.05) rotate(-3deg);
+}
+
+.brand-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
   line-height: 1.1;
 }
 
-.brand p {
-  margin: 2px 0 0;
+.brand-tag {
+  display: inline-block;
+  margin-top: 2px;
   font-size: 11px;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.nav-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-faint);
-  padding: 12px 12px 6px;
+  padding: 10px 12px 8px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
   font-size: 14px;
   font-weight: 500;
   color: var(--text-muted);
-  transition: 0.15s;
+  transition: all var(--transition-fast);
+  position: relative;
 }
 
-.nav-link .nav-icon {
-  width: 20px;
-  height: 20px;
+.nav-icon-wrap {
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.nav-text {
+  flex: 1;
+}
+
+.nav-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--danger);
+  color: #fff;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  line-height: 1.3;
+  animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-link:hover {
-  background: var(--bg-subtle);
+  background: var(--bg-subtle-hover);
   color: var(--text-main);
+  transform: translateX(3px);
+}
+
+.nav-link:hover .nav-icon-wrap {
+  transform: scale(1.1);
+  color: var(--primary);
 }
 
 .nav-link.active {
   background: var(--primary-soft);
   color: var(--primary-strong);
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* ===== Main content ===== */
+.nav-link.active .nav-icon-wrap {
+  color: var(--primary-strong);
+}
+
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--primary);
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.sidebar-date-card {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: var(--radius);
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-date-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sidebar-date-text {
+  margin: 4px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sidebar-alert-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--amber-text);
+  background: rgba(254, 243, 199, 0.9);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.alert-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: pulseGlow 1.5s infinite;
+}
+
+.sidebar-ok-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--success-text);
+  background: rgba(209, 250, 229, 0.9);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* =========================================================
+   Main Wrapper & Content
+   ========================================================= */
+.main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  z-index: 10;
+}
+
 .main-content {
   flex: 1;
-  padding: 28px 32px 96px;
-  max-width: 1200px;
+  padding: 32px 36px 96px;
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
 }
@@ -107,29 +251,39 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
 }
 
 .page-sub {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
 }
 
-/* ===== Topbar (mobile) ===== */
+/* =========================================================
+   Mobile Topbar
+   ========================================================= */
 .topbar {
   display: none;
 }
 
-/* ===== Bottom tab bar (mobile) ===== */
+/* =========================================================
+   Mobile Bottom Navigation (Floating Dock)
+   ========================================================= */
 .bottom-tabs {
   display: none;
 }
 
+/* =========================================================
+   Responsive Breakpoints
+   ========================================================= */
 @media (max-width: 900px) {
   .sidebar {
     display: none;
@@ -140,60 +294,145 @@
   }
 
   .main-content {
-    padding: 20px 16px 104px;
+    padding: 14px 12px 96px;
   }
 
   .topbar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: var(--bg-surface);
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    z-index: 20;
+    z-index: 40;
   }
 
   .topbar .brand {
     border-bottom: none;
     padding: 0;
     margin: 0;
-    flex: 1;
   }
 
-  .bottom-tabs {
+  .topbar-actions {
     display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-bell-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-pill);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-main);
+  }
+
+  .bell-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  }
+
+  /* Floating Modern Bottom Dock */
+  .bottom-tabs {
+    display: block;
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--bg-surface);
-    border-top: 1px solid var(--border);
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-    z-index: 30;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  .bottom-tabs-inner {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(220, 225, 240, 0.85);
+    border-radius: var(--radius-2xl);
+    padding: 5px 6px;
+    display: flex;
     justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 12px 30px -6px rgba(124, 58, 237, 0.16), 0 4px 12px rgba(0, 0, 0, 0.04);
   }
 
   .bottom-tab {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
-    padding: 6px 12px;
-    border-radius: 10px;
+    gap: 2px;
+    padding: 4px 6px;
+    border-radius: var(--radius);
     font-size: 10px;
     font-weight: 600;
     color: var(--text-faint);
-    min-width: 60px;
+    transition: all var(--transition-fast);
+    flex: 1;
+    max-width: 68px;
   }
 
-  .bottom-tab .nav-icon {
-    width: 22px;
-    height: 22px;
+  .bottom-tab-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-pill);
+    transition: all var(--transition);
+  }
+
+  .bottom-tab-badge {
+    position: absolute;
+    top: -3px;
+    right: -4px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
   }
 
   .bottom-tab.active {
+    color: var(--primary-strong);
+  }
+
+  .bottom-tab.active .bottom-tab-icon-wrap {
+    background: var(--primary-soft);
     color: var(--primary);
+    transform: translateY(-2px);
+  }
+
+  .bottom-tab.active .bottom-tab-label {
+    font-weight: 700;
   }
 }
