@@ -1,7 +1,12 @@
-// Helper kirim notifikasi WhatsApp via Fonnte.
-// Docs: https://docs.fonnte.com/
+// Helper kirim notifikasi WhatsApp via Akasha WhatsApp Gateway (Self-Hosted).
+// Endpoint: https://akasha.tail5ad5ce.ts.net/api/send
 
-const FONNTE_TOKEN = import.meta.env.VITE_FONNTE_TOKEN || '';
+const GATEWAY_URL =
+  import.meta.env.VITE_WA_GATEWAY_URL || 'https://akasha.tail5ad5ce.ts.net/api/send';
+const GATEWAY_TOKEN =
+  import.meta.env.VITE_WA_GATEWAY_TOKEN ||
+  import.meta.env.VITE_FONNTE_TOKEN ||
+  'device_Web_HR_71742ed9ba00720e';
 
 function normalizePhone(phone) {
   if (!phone) return '';
@@ -11,32 +16,35 @@ function normalizePhone(phone) {
   return p;
 }
 
-// Kirim pesan ke satu nomor. Tidak throw bila gagal, agar approval tetap jalan.
+// Kirim pesan ke satu nomor via Akasha Gateway. Tidak throw bila gagal, agar approval tetap jalan.
 export async function sendWhatsApp(phone, message) {
   const target = normalizePhone(phone);
   if (!target) return { ok: false, reason: 'no-phone' };
-  if (!FONNTE_TOKEN) {
-    console.warn('[Fonnte] VITE_FONNTE_TOKEN belum diisi. Lewati kirim WA.');
+  if (!GATEWAY_TOKEN) {
+    console.warn('[Akasha WA] Token gateway belum diisi. Lewati kirim WA.');
     return { ok: false, reason: 'no-token' };
   }
 
   try {
-    const res = await fetch('https://api.fonnte.com/send', {
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: GATEWAY_TOKEN.startsWith('Bearer ') ? GATEWAY_TOKEN : `Bearer ${GATEWAY_TOKEN}`,
+    };
+
+    const res = await fetch(GATEWAY_URL, {
       method: 'POST',
-      headers: {
-        Authorization: FONNTE_TOKEN,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ target, message }),
     });
+
     const data = await res.json().catch(() => null);
-    if (!res.ok || data?.status === false) {
-      console.warn('[Fonnte] Gagal kirim WA ke', target, data);
+    if (!res.ok || data?.status === false || data?.success === false) {
+      console.warn('[Akasha WA] Gagal kirim WA ke', target, data);
       return { ok: false, reason: 'api-error', data };
     }
     return { ok: true, data };
   } catch (err) {
-    console.warn('[Fonnte] Error kirim WA:', err);
+    console.warn('[Akasha WA] Error kirim WA:', err);
     return { ok: false, reason: 'network-error' };
   }
 }
