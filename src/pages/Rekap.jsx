@@ -12,8 +12,8 @@ import {
   ArrowUpDown,
   RotateCcw,
   Eye,
-  BarChart3,
-  FileText,
+  X,
+  UserCheck,
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import StatusBadge from '../components/StatusBadge';
@@ -29,34 +29,38 @@ import {
   getHariPotongCuti,
   formatTanggal,
   formatRentangTanggal,
-  formatJam,
   formatRentangJam,
-  formatDateTime,
 } from '../lib/utils';
 
 export default function Rekap() {
   const { izin, lembur, master } = useAppStore();
   const notify = useToast();
 
-  // --- View & Filter State ---
-  const [activeTab, setActiveTab] = useState('karyawan'); // 'karyawan' | 'izin' | 'lembur' | 'analitik'
-  const [periodPreset, setPeriodPreset] = useState('ALL'); // 'ALL' | 'THIS_MONTH' | 'LAST_MONTH' | 'THIS_YEAR' | 'CUSTOM'
-  const [customMonth, setCustomMonth] = useState('ALL');
-  const [deptFilter, setDeptFilter] = useState('ALL');
-  const [statusFilter, setStatusFilter] = useState('ALL_DECIDED'); // 'ALL_DECIDED' | 'APPROVED' | 'REJECTED' | 'ALL'
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('nama_asc');
-
-  // --- Drilldown Modal State ---
-  const [drilldownEmp, setDrilldownEmp] = useState(null);
-  const [drilldownSubTab, setDrilldownSubTab] = useState('izin');
-
   // Current date markers
   const now = new Date();
   const curYear = now.getFullYear();
   const curMonth = now.getMonth(); // 0-indexed
 
-  // --- 1. Available Months for Custom Dropdown ---
+  // --- 1. Sederhana: Filter State (Default ke Bulan Ini) ---
+  const [activeTab, setActiveTab] = useState('karyawan'); // 'karyawan' | 'izin' | 'lembur'
+  const [period, setPeriod] = useState('THIS_MONTH'); // 'THIS_MONTH' | 'LAST_MONTH' | 'THIS_YEAR' | 'ALL' | custom 'Bulan YYYY'
+  const [deptFilter, setDeptFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('DECIDED'); // 'DECIDED' | 'APPROVED' | 'REJECTED' | 'ALL'
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('nama_asc');
+  const [onlyActiveEmployees, setOnlyActiveEmployees] = useState(false);
+
+  // Modal Detail Karyawan
+  const [drilldownEmp, setDrilldownEmp] = useState(null);
+  const [drilldownSubTab, setDrilldownSubTab] = useState('izin');
+
+  // Perhitungan Bulan Lalu
+  const lastMonthNum = curMonth === 0 ? 11 : curMonth - 1;
+  const lastMonthYear = curMonth === 0 ? curYear - 1 : curYear;
+  const lastMonthString = `${MONTH_NAMES[lastMonthNum]} ${lastMonthYear}`;
+  const thisMonthString = `${MONTH_NAMES[curMonth]} ${curYear}`;
+
+  // --- 2. Daftar Bulan yang Tersedia (Diurutkan Terbaru ke Terlama) ---
   const availableMonths = useMemo(() => {
     const set = new Set();
     const addDate = (d) => {
@@ -71,20 +75,20 @@ export default function Rekap() {
       }
     });
 
-    // Make sure current month & year are always included
-    MONTH_NAMES.forEach((m) => {
-      set.add(`${m} ${curYear}`);
-    });
+    // Singkirkan Bulan Ini dan Bulan Lalu dari daftar tambahan agar tidak duplikat di dropdown
+    const list = Array.from(set).filter(
+      (m) => m !== thisMonthString && m !== lastMonthString
+    );
 
-    return Array.from(set).sort((a, b) => {
+    return list.sort((a, b) => {
       const [mA, yA] = a.split(' ');
       const [mB, yB] = b.split(' ');
       if (yA !== yB) return parseInt(yB || 0, 10) - parseInt(yA || 0, 10);
       return MONTH_NAMES.indexOf(mB) - MONTH_NAMES.indexOf(mA);
     });
-  }, [izin, lembur, curYear]);
+  }, [izin, lembur, thisMonthString, lastMonthString]);
 
-  // --- 2. Available Departments ---
+  // --- 3. Daftar Divisi / Departemen ---
   const departments = useMemo(() => {
     const set = new Set();
     master.forEach((m) => {
@@ -95,15 +99,15 @@ export default function Rekap() {
     return Array.from(set).sort();
   }, [master]);
 
-  // --- 3. Helper: Check if date string matches selected period ---
+  // --- 4. Helper Pencocokan Periode ---
   const matchPeriod = useCallback(
     (dateStr, bulanLemburStr = '') => {
-      if (periodPreset === 'ALL') return true;
+      if (period === 'ALL') return true;
 
-      if (periodPreset === 'CUSTOM') {
-        if (!customMonth || customMonth === 'ALL') return true;
-        if (bulanLemburStr && bulanLemburStr.trim() === customMonth) return true;
-        return getMonthStringFromDate(dateStr) === customMonth;
+      // Pilihan bulan spesifik (misal "September 2026")
+      if (period !== 'THIS_MONTH' && period !== 'LAST_MONTH' && period !== 'THIS_YEAR') {
+        if (bulanLemburStr && bulanLemburStr.trim() === period) return true;
+        return getMonthStringFromDate(dateStr) === period;
       }
 
       if (!dateStr) return false;
@@ -113,54 +117,47 @@ export default function Rekap() {
       const m = parseInt(parts[1], 10) - 1;
       if (isNaN(y) || isNaN(m)) return false;
 
-      if (periodPreset === 'THIS_MONTH') {
+      if (period === 'THIS_MONTH') {
         return y === curYear && m === curMonth;
       }
-      if (periodPreset === 'LAST_MONTH') {
-        const targetYear = curMonth === 0 ? curYear - 1 : curYear;
-        const targetMonth = curMonth === 0 ? 11 : curMonth - 1;
-        return y === targetYear && m === targetMonth;
+      if (period === 'LAST_MONTH') {
+        return y === lastMonthYear && m === lastMonthNum;
       }
-      if (periodPreset === 'THIS_YEAR') {
+      if (period === 'THIS_YEAR') {
         return y === curYear;
       }
       return true;
     },
-    [periodPreset, customMonth, curYear, curMonth]
+    [period, curYear, curMonth, lastMonthYear, lastMonthNum]
   );
 
-  // Human-readable period label
+  // Label periode untuk judul & laporan
   const periodLabel = useMemo(() => {
-    if (periodPreset === 'ALL') return 'Semua Waktu (All Time)';
-    if (periodPreset === 'THIS_MONTH') return `Bulan Ini (${MONTH_NAMES[curMonth]} ${curYear})`;
-    if (periodPreset === 'LAST_MONTH') {
-      const targetMonth = curMonth === 0 ? 11 : curMonth - 1;
-      const targetYear = curMonth === 0 ? curYear - 1 : curYear;
-      return `Bulan Lalu (${MONTH_NAMES[targetMonth]} ${targetYear})`;
-    }
-    if (periodPreset === 'THIS_YEAR') return `Tahun Ini (${curYear} YTD)`;
-    if (periodPreset === 'CUSTOM') return customMonth === 'ALL' ? 'Semua Bulan' : customMonth;
-    return 'Kustom';
-  }, [periodPreset, customMonth, curMonth, curYear]);
+    if (period === 'THIS_MONTH') return `Bulan Ini (${thisMonthString})`;
+    if (period === 'LAST_MONTH') return `Bulan Lalu (${lastMonthString})`;
+    if (period === 'THIS_YEAR') return `Tahun Ini (${curYear})`;
+    if (period === 'ALL') return 'Semua Periode';
+    return period;
+  }, [period, thisMonthString, lastMonthString, curYear]);
 
-  // --- 4. Filtering Engine for Izin & Lembur ---
+  // --- 5. Filter Data Izin & Lembur ---
   const filteredIzin = useMemo(() => {
     return izin.filter((x) => {
-      // 1. Period
+      // Periode
       if (!matchPeriod(x.tanggal_izin_mulai)) return false;
 
-      // 2. Status
+      // Status
       const st = normalizeStatus(x.status);
-      if (statusFilter === 'ALL_DECIDED' && st === 'PENDING') return false;
+      if (statusFilter === 'DECIDED' && st === 'PENDING') return false;
       if (statusFilter === 'APPROVED' && st !== 'APPROVED') return false;
       if (statusFilter === 'REJECTED' && st !== 'REJECTED') return false;
 
-      // 3. Department
+      // Divisi
       const emp = master.find((m) => m.id_karyawan === x.id_karyawan);
       const empDept = emp?.departemen || 'Umum';
       if (deptFilter !== 'ALL' && empDept !== deptFilter) return false;
 
-      // 4. Search Query
+      // Cari
       if (search.trim()) {
         const q = search.toLowerCase();
         const nm = getNama(x, master).toLowerCase();
@@ -179,29 +176,28 @@ export default function Rekap() {
 
   const filteredLembur = useMemo(() => {
     return lembur.filter((x) => {
-      // 1. Period
+      // Periode
       if (!matchPeriod(x.tanggal_lembur, x.bulan_lembur)) return false;
 
-      // 2. Status
+      // Status
       const st = normalizeStatus(x.status);
-      if (statusFilter === 'ALL_DECIDED' && st === 'PENDING') return false;
+      if (statusFilter === 'DECIDED' && st === 'PENDING') return false;
       if (statusFilter === 'APPROVED' && st !== 'APPROVED') return false;
       if (statusFilter === 'REJECTED' && st !== 'REJECTED') return false;
 
-      // 3. Department
+      // Divisi
       const emp = master.find((m) => m.id_karyawan === x.id_karyawan);
       const empDept = emp?.departemen || 'Umum';
       if (deptFilter !== 'ALL' && empDept !== deptFilter) return false;
 
-      // 4. Search Query
+      // Cari
       if (search.trim()) {
         const q = search.toLowerCase();
         const nm = getNama(x, master).toLowerCase();
         const idK = String(x.id_karyawan || '').toLowerCase();
         const als = String(x.alasan || '').toLowerCase();
-        const bln = String(x.bulan_lembur || '').toLowerCase();
         const dpt = empDept.toLowerCase();
-        if (!nm.includes(q) && !idK.includes(q) && !als.includes(q) && !bln.includes(q) && !dpt.includes(q)) {
+        if (!nm.includes(q) && !idK.includes(q) && !als.includes(q) && !dpt.includes(q)) {
           return false;
         }
       }
@@ -210,28 +206,26 @@ export default function Rekap() {
     });
   }, [lembur, master, matchPeriod, statusFilter, deptFilter, search]);
 
-  // --- 5. Executive KPIs Calculation ---
-  const kpiData = useMemo(() => {
+  // --- 6. Kartu Ringkasan Eksekutif SDM ---
+  const summaryKPI = useMemo(() => {
     let jamLemburApproved = 0;
-    let jamLemburRejected = 0;
-    let hariCutiTerpotong = 0;
-    let hariIzinLainnya = 0;
+    let sesiLembur = 0;
+    let hariCutiDipotong = 0;
+    let hariIzinLain = 0;
 
     filteredLembur.forEach((l) => {
-      const dur = parseFloat(l.durasi) || 0;
       if (normalizeStatus(l.status) === 'APPROVED') {
-        jamLemburApproved += dur;
-      } else if (normalizeStatus(l.status) === 'REJECTED') {
-        jamLemburRejected += dur;
+        jamLemburApproved += parseFloat(l.durasi) || 0;
+        sesiLembur += 1;
       }
     });
 
     filteredIzin.forEach((i) => {
       if (normalizeStatus(i.status) === 'APPROVED') {
         const potong = getHariPotongCuti(i);
-        const totalHari = daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir);
-        hariCutiTerpotong += potong;
-        hariIzinLainnya += Math.max(0, totalHari - potong);
+        const total = daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir);
+        hariCutiDipotong += potong;
+        hariIzinLain += Math.max(0, total - potong);
       }
     });
 
@@ -243,35 +237,31 @@ export default function Rekap() {
       filteredIzin.filter((i) => normalizeStatus(i.status) === 'APPROVED').length +
       filteredLembur.filter((l) => normalizeStatus(l.status) === 'APPROVED').length;
 
-    const approvalRate = totalDecided > 0 ? ((totalApproved / totalDecided) * 100).toFixed(1) : '100.0';
+    const approvalRate = totalDecided > 0 ? Math.round((totalApproved / totalDecided) * 100) : 100;
 
-    // Unique active headcount
-    const activeHeadcountSet = new Set();
-    filteredIzin.forEach((i) => i.id_karyawan && activeHeadcountSet.add(i.id_karyawan));
-    filteredLembur.forEach((l) => l.id_karyawan && activeHeadcountSet.add(l.id_karyawan));
+    const activeSet = new Set();
+    filteredIzin.forEach((i) => i.id_karyawan && activeSet.add(i.id_karyawan));
+    filteredLembur.forEach((l) => l.id_karyawan && activeSet.add(l.id_karyawan));
 
     return {
       jamLemburApproved: Math.round(jamLemburApproved * 10) / 10,
-      jamLemburRejected: Math.round(jamLemburRejected * 10) / 10,
-      hariCutiTerpotong,
-      hariIzinLainnya,
-      totalDecided,
-      totalApproved,
+      sesiLembur,
+      hariCutiDipotong,
+      hariIzinLain,
+      activeCount: activeSet.size,
       approvalRate,
-      activeHeadcount: activeHeadcountSet.size,
     };
   }, [filteredIzin, filteredLembur]);
 
-  // --- 6. Per-Employee Rollup (Rangkuman Karyawan) ---
-  const karyawanRollup = useMemo(() => {
-    // Annual leave usage helper across ALL approved permits this calendar year
-    const annualLeaveUsageMap = {};
+  // --- 7. Rekap per Karyawan (Tabel Karyawan) ---
+  const employeeList = useMemo(() => {
+    // Menghitung cuti terpakai sepanjang tahun berjalan
+    const annualUsageMap = {};
     izin.forEach((i) => {
       if (normalizeStatus(i.status) === 'APPROVED' && i.id_karyawan) {
         const d = String(i.tanggal_izin_mulai || '');
         if (d.startsWith(String(curYear))) {
-          const potong = getHariPotongCuti(i);
-          annualLeaveUsageMap[i.id_karyawan] = (annualLeaveUsageMap[i.id_karyawan] || 0) + potong;
+          annualUsageMap[i.id_karyawan] = (annualUsageMap[i.id_karyawan] || 0) + getHariPotongCuti(i);
         }
       }
     });
@@ -281,323 +271,263 @@ export default function Rekap() {
       const empLembur = filteredLembur.filter((l) => l.id_karyawan === emp.id_karyawan);
 
       let jamLemburAcc = 0;
-      let jamLemburRej = 0;
       empLembur.forEach((l) => {
-        const dur = parseFloat(l.durasi) || 0;
-        if (normalizeStatus(l.status) === 'APPROVED') jamLemburAcc += dur;
-        else if (normalizeStatus(l.status) === 'REJECTED') jamLemburRej += dur;
+        if (normalizeStatus(l.status) === 'APPROVED') {
+          jamLemburAcc += parseFloat(l.durasi) || 0;
+        }
       });
 
-      let hariCutiTerpotongPeriod = 0;
-      let hariIzinLainPeriod = 0;
+      let cutiPeriodeIni = 0;
+      let izinLainPeriodeIni = 0;
       empIzin.forEach((i) => {
         if (normalizeStatus(i.status) === 'APPROVED') {
           const potong = getHariPotongCuti(i);
           const total = daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir);
-          hariCutiTerpotongPeriod += potong;
-          hariIzinLainPeriod += Math.max(0, total - potong);
+          cutiPeriodeIni += potong;
+          izinLainPeriodeIni += Math.max(0, total - potong);
         }
       });
 
       const jatahAwal = emp.jatah_cuti ?? 12;
-      const annualUsed = annualLeaveUsageMap[emp.id_karyawan] || 0;
+      const annualUsed = annualUsageMap[emp.id_karyawan] || 0;
       const sisaCuti = Math.max(0, jatahAwal - annualUsed);
+      const totalPengajuan = empIzin.length + empLembur.length;
 
-      const totalAktivitas = empIzin.length + empLembur.length;
+      // Mengumpulkan semua tanggal aktivitas periode ini untuk sorting kronologis
+      const dates = [];
+      empIzin.forEach((i) => {
+        if (i.tanggal_izin_mulai) dates.push(String(i.tanggal_izin_mulai));
+      });
+      empLembur.forEach((l) => {
+        if (l.tanggal_lembur) dates.push(String(l.tanggal_lembur));
+      });
+      dates.sort();
+      const oldestActivityDate = dates.length > 0 ? dates[0] : null;
+      const latestActivityDate = dates.length > 0 ? dates[dates.length - 1] : null;
 
       return {
         id_karyawan: emp.id_karyawan,
         nama_karyawan: emp.nama_karyawan,
         departemen: emp.departemen || 'Umum',
         jabatan: emp.jabatan || 'Karyawan',
+        tgl_gabung: emp.tgl_gabung || '',
         jatahAwal,
         annualUsed,
         sisaCuti,
-        hariCutiTerpotongPeriod,
-        hariIzinLainPeriod,
+        cutiPeriodeIni,
+        izinLainPeriodeIni,
         jamLemburAcc: Math.round(jamLemburAcc * 10) / 10,
-        jamLemburRej: Math.round(jamLemburRej * 10) / 10,
-        countIzin: empIzin.length,
-        countLembur: empLembur.length,
-        totalAktivitas,
-        empRaw: emp,
+        sesiLembur: empLembur.length,
+        totalIzin: empIzin.length,
+        totalPengajuan,
+        hasActivity: totalPengajuan > 0,
+        oldestActivityDate,
+        latestActivityDate,
       };
     });
 
-    // Apply department & search filter directly to employee rollup as well
-    const filteredList = list.filter((emp) => {
+    // Filter Divisi & Search
+    let result = list.filter((emp) => {
       if (deptFilter !== 'ALL' && emp.departemen !== deptFilter) return false;
+      if (onlyActiveEmployees && !emp.hasActivity) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const nm = emp.nama_karyawan.toLowerCase();
         const idK = emp.id_karyawan.toLowerCase();
         const dpt = emp.departemen.toLowerCase();
-        const jbt = emp.jabatan.toLowerCase();
-        if (!nm.includes(q) && !idK.includes(q) && !dpt.includes(q) && !jbt.includes(q)) {
-          return false;
-        }
+        if (!nm.includes(q) && !idK.includes(q) && !dpt.includes(q)) return false;
       }
       return true;
     });
 
-    // Sort
-    return filteredList.sort((a, b) => {
+    // Sort: 2 Section (Berdasarkan Data & Berdasarkan Waktu)
+    return result.sort((a, b) => {
+      // 1. Berdasarkan Data (Metrik)
       if (sortBy === 'nama_asc') return a.nama_karyawan.localeCompare(b.nama_karyawan);
       if (sortBy === 'nama_desc') return b.nama_karyawan.localeCompare(a.nama_karyawan);
       if (sortBy === 'lembur_desc') return b.jamLemburAcc - a.jamLemburAcc;
       if (sortBy === 'sisa_cuti_asc') return a.sisaCuti - b.sisaCuti;
       if (sortBy === 'dept') return a.departemen.localeCompare(b.departemen);
+
+      // 2. Berdasarkan Waktu (Kronologi)
+      if (sortBy === 'time_latest') {
+        if (!a.latestActivityDate && !b.latestActivityDate) return a.nama_karyawan.localeCompare(b.nama_karyawan);
+        if (!a.latestActivityDate) return 1;
+        if (!b.latestActivityDate) return -1;
+        return b.latestActivityDate.localeCompare(a.latestActivityDate);
+      }
+      if (sortBy === 'time_oldest') {
+        if (!a.oldestActivityDate && !b.oldestActivityDate) return a.nama_karyawan.localeCompare(b.nama_karyawan);
+        if (!a.oldestActivityDate) return 1;
+        if (!b.oldestActivityDate) return -1;
+        return a.oldestActivityDate.localeCompare(b.oldestActivityDate);
+      }
+      if (sortBy === 'join_latest') {
+        if (!a.tgl_gabung && !b.tgl_gabung) return a.nama_karyawan.localeCompare(b.nama_karyawan);
+        if (!a.tgl_gabung) return 1;
+        if (!b.tgl_gabung) return -1;
+        return String(b.tgl_gabung).localeCompare(String(a.tgl_gabung));
+      }
+
       return 0;
     });
-  }, [master, filteredIzin, filteredLembur, izin, curYear, deptFilter, search, sortBy]);
+  }, [master, filteredIzin, filteredLembur, izin, curYear, deptFilter, onlyActiveEmployees, search, sortBy]);
 
-  // --- 7. Department Analytics Distribution ---
-  const departmentAnalytics = useMemo(() => {
-    const map = {};
-    departments.forEach((d) => {
-      map[d] = { dept: d, jamLembur: 0, hariCuti: 0, headcount: 0 };
-    });
-    if (!map['Umum']) map['Umum'] = { dept: 'Umum', jamLembur: 0, hariCuti: 0, headcount: 0 };
-
-    master.forEach((m) => {
-      const d = m.departemen || 'Umum';
-      if (!map[d]) map[d] = { dept: d, jamLembur: 0, hariCuti: 0, headcount: 0 };
-      map[d].headcount += 1;
-    });
-
-    filteredLembur.forEach((l) => {
-      if (normalizeStatus(l.status) === 'APPROVED') {
-        const emp = master.find((m) => m.id_karyawan === l.id_karyawan);
-        const d = emp?.departemen || 'Umum';
-        if (!map[d]) map[d] = { dept: d, jamLembur: 0, hariCuti: 0, headcount: 0 };
-        map[d].jamLembur += parseFloat(l.durasi) || 0;
-      }
-    });
-
-    filteredIzin.forEach((i) => {
-      if (normalizeStatus(i.status) === 'APPROVED') {
-        const emp = master.find((m) => m.id_karyawan === i.id_karyawan);
-        const d = emp?.departemen || 'Umum';
-        if (!map[d]) map[d] = { dept: d, jamLembur: 0, hariCuti: 0, headcount: 0 };
-        map[d].hariCuti += getHariPotongCuti(i);
-      }
-    });
-
-    const arr = Object.values(map);
-    const maxLembur = Math.max(...arr.map((x) => x.jamLembur), 1);
-    const maxCuti = Math.max(...arr.map((x) => x.hariCuti), 1);
-
-    return {
-      list: arr,
-      maxLembur,
-      maxCuti,
-    };
-  }, [departments, master, filteredLembur, filteredIzin]);
-
-  // --- 8. MULTI-SHEET ENTERPRISE EXCEL EXPORTER ---
-  const exportEnterpriseMaster = () => {
-    if (!filteredIzin.length && !filteredLembur.length && !karyawanRollup.length) {
-      return notify('❌ Tidak ada data yang sesuai filter untuk diekspor.');
+  // --- 8. Download Laporan Excel Utama (3 Sheet Rapi) ---
+  const downloadLaporanExcel = () => {
+    if (!employeeList.length && !filteredIzin.length && !filteredLembur.length) {
+      return notify('Tidak ada data untuk diekspor pada filter ini.');
     }
 
     const wb = XLSX.utils.book_new();
-    const stamp = formatDateTime(new Date());
 
-    // 1. Sheet: Ringkasan Eksekutif (Metadata & KPI)
-    const execSummaryData = [
-      { Parameter: 'LAPORAN REKAPITULASI SDM & AUDIT TRAIL', Nilai: 'PT ARASA SOLUSI INDONESIA' },
-      { Parameter: 'Portal Sistem', Nilai: 'Arasa Enterprise HR Portal v2.0' },
-      { Parameter: 'Waktu Pengunduhan', Nilai: stamp },
-      { Parameter: 'Filter Periode', Nilai: periodLabel },
-      { Parameter: 'Filter Departemen', Nilai: deptFilter === 'ALL' ? 'Semua Departemen' : deptFilter },
-      { Parameter: 'Filter Status Approval', Nilai: statusFilter },
-      { Parameter: '', Nilai: '' },
-      { Parameter: 'RINGKASAN METRIK UTAMA (KPI)', Nilai: '' },
-      { Parameter: 'Total Karyawan Terdaftar', Nilai: `${master.length} Orang` },
-      { Parameter: 'Karyawan Aktif Periode Ini', Nilai: `${kpiData.activeHeadcount} Orang` },
-      { Parameter: 'Total Jam Lembur Disetujui', Nilai: `${kpiData.jamLemburApproved} Jam` },
-      { Parameter: 'Total Jam Lembur Ditolak', Nilai: `${kpiData.jamLemburRejected} Jam` },
-      { Parameter: 'Total Hari Cuti Dipotong', Nilai: `${kpiData.hariCutiTerpotong} Hari` },
-      { Parameter: 'Total Hari Izin/Sakit Non-Potong', Nilai: `${kpiData.hariIzinLainnya} Hari` },
-      { Parameter: 'Tingkat Persetujuan (Approval Rate)', Nilai: `${kpiData.approvalRate}%` },
-    ];
-    const wsExec = XLSX.utils.json_to_sheet(execSummaryData);
-    wsExec['!cols'] = [{ wch: 38 }, { wch: 45 }];
-    XLSX.utils.book_append_sheet(wb, wsExec, 'Ringkasan Eksekutif');
-
-    // 2. Sheet: Rangkuman per Karyawan
-    const rollupSheetData = karyawanRollup.map((k, idx) => ({
+    // Sheet 1: Rekap Karyawan
+    const sheet1Data = employeeList.map((k, idx) => ({
       No: idx + 1,
       'ID Karyawan': k.id_karyawan,
       'Nama Karyawan': k.nama_karyawan,
-      Departemen: k.departemen,
+      Divisi: k.departemen,
       Jabatan: k.jabatan,
       'Jatah Cuti Awal': k.jatahAwal,
-      'Cuti Terpakai Periode Ini': k.hariCutiTerpotongPeriod,
-      'Total Cuti Tahunan Terpakai': k.annualUsed,
-      'Sisa Saldo Cuti': k.sisaCuti,
-      'Izin Non-Potong (Hari)': k.hariIzinLainPeriod,
-      'Jam Lembur Disetujui (Jam)': k.jamLemburAcc,
-      'Jam Lembur Ditolak (Jam)': k.jamLemburRej,
-      'Frekuensi Lembur (Kali)': k.countLembur,
-      'Frekuensi Izin (Kali)': k.countIzin,
+      'Cuti Terpakai (Periode Ini)': k.cutiPeriodeIni,
+      'Sisa Saldo Cuti (Hari)': k.sisaCuti,
+      'Izin Non-Potong (Hari)': k.izinLainPeriodeIni,
+      'Total Lembur Disetujui (Jam)': k.jamLemburAcc,
+      'Frekuensi Lembur': k.sesiLembur,
+      'Frekuensi Izin': k.totalIzin,
     }));
-    const wsRollup = XLSX.utils.json_to_sheet(rollupSheetData);
-    wsRollup['!cols'] = [
+    const ws1 = XLSX.utils.json_to_sheet(sheet1Data);
+    ws1['!cols'] = [
       { wch: 6 },
       { wch: 14 },
       { wch: 28 },
       { wch: 18 },
       { wch: 18 },
       { wch: 16 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 16 },
-      { wch: 20 },
       { wch: 26 },
-      { wch: 24 },
       { wch: 22 },
-      { wch: 20 },
+      { wch: 22 },
+      { wch: 26 },
+      { wch: 18 },
+      { wch: 16 },
     ];
-    XLSX.utils.book_append_sheet(wb, wsRollup, 'Rangkuman Karyawan');
+    XLSX.utils.book_append_sheet(wb, ws1, 'Rekap Saldo & Lembur');
 
-    // 3. Sheet: Detail Log Izin & Cuti
-    const izinSheetData = filteredIzin.map((i, idx) => {
+    // Sheet 2: Riwayat Izin
+    const sheet2Data = filteredIzin.map((i, idx) => {
       const emp = master.find((m) => m.id_karyawan === i.id_karyawan);
       const potong = getHariPotongCuti(i);
-      const total = daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir);
       return {
         No: idx + 1,
         'ID Karyawan': i.id_karyawan,
         'Nama Karyawan': getNama(i, master),
-        Departemen: emp?.departemen || 'Umum',
-        'Rentang Tanggal': formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
-        'Tanggal Mulai': formatTanggal(i.tanggal_izin_mulai),
-        'Tanggal Akhir': formatTanggal(i.tanggal_izin_akhir),
-        'Total Hari': total,
-        'Kategori Izin': i.kategori_izin,
-        'Potong Cuti Tahunan': potong > 0 ? `Ya (${potong} Hari)` : 'Tidak (0 Hari)',
-        'Alasan / Justifikasi': i.alasan || '-',
+        Divisi: emp?.departemen || 'Umum',
+        'Tanggal Izin': formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
+        'Total Hari': daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
+        'Kategori Izin': i.kategori_izin || '-',
+        'Potong Cuti': potong > 0 ? `Ya (${potong} Hari)` : 'Tidak (0 Hari)',
+        Alasan: i.alasan || '-',
         Status: normalizeStatus(i.status),
-        'Tanggal Pengajuan': i.created_at ? formatDateTime(i.created_at) : '-',
       };
     });
-    const wsIzin = XLSX.utils.json_to_sheet(izinSheetData);
-    wsIzin['!cols'] = [
+    const ws2 = XLSX.utils.json_to_sheet(sheet2Data);
+    ws2['!cols'] = [
       { wch: 6 },
       { wch: 14 },
-      { wch: 26 },
+      { wch: 28 },
       { wch: 18 },
-      { wch: 20 },
-      { wch: 16 },
-      { wch: 16 },
+      { wch: 24 },
       { wch: 12 },
       { wch: 18 },
-      { wch: 22 },
+      { wch: 18 },
       { wch: 35 },
       { wch: 14 },
-      { wch: 22 },
     ];
-    XLSX.utils.book_append_sheet(wb, wsIzin, 'Log Izin & Cuti');
+    XLSX.utils.book_append_sheet(wb, ws2, 'Riwayat Izin & Cuti');
 
-    // 4. Sheet: Detail Log Lembur
-    const lemburSheetData = filteredLembur.map((l, idx) => {
+    // Sheet 3: Riwayat Lembur
+    const sheet3Data = filteredLembur.map((l, idx) => {
       const emp = master.find((m) => m.id_karyawan === l.id_karyawan);
       return {
         No: idx + 1,
         'ID Karyawan': l.id_karyawan,
         'Nama Karyawan': getNama(l, master),
-        Departemen: emp?.departemen || 'Umum',
+        Divisi: emp?.departemen || 'Umum',
         'Tanggal Lembur': formatTanggal(l.tanggal_lembur, 'long'),
         'Waktu Lembur': formatRentangJam(l.jam_awal, l.jam_selesai),
-        'Jam Awal': formatJam(l.jam_awal, false),
-        'Jam Selesai': formatJam(l.jam_selesai, false),
         'Durasi (Jam)': parseFloat(l.durasi) || 0,
-        'Format Jam': formatTeksJam(l.durasi),
-        'Bulan Rekap': l.bulan_lembur,
+        'Durasi Teks': formatTeksJam(l.durasi),
         'Pekerjaan / Alasan': l.alasan || '-',
         Status: normalizeStatus(l.status),
-        'Tanggal Pengajuan': l.created_at ? formatDateTime(l.created_at) : '-',
       };
     });
-    const wsLembur = XLSX.utils.json_to_sheet(lemburSheetData);
-    wsLembur['!cols'] = [
+    const ws3 = XLSX.utils.json_to_sheet(sheet3Data);
+    ws3['!cols'] = [
       { wch: 6 },
       { wch: 14 },
-      { wch: 26 },
+      { wch: 28 },
       { wch: 18 },
-      { wch: 20 },
-      { wch: 20 },
-      { wch: 12 },
-      { wch: 12 },
+      { wch: 22 },
+      { wch: 22 },
       { wch: 14 },
       { wch: 18 },
-      { wch: 16 },
       { wch: 35 },
       { wch: 14 },
-      { wch: 22 },
     ];
-    XLSX.utils.book_append_sheet(wb, wsLembur, 'Log Lembur');
+    XLSX.utils.book_append_sheet(wb, ws3, 'Riwayat Lembur');
 
-    const cleanPeriodName = periodLabel.replace(/[\s/\\?%*:|"<>]+/g, '_');
-    const fileName = `Rekap_SDM_Arasa_${cleanPeriodName}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    notify('✅ Laporan Komprehensif Multi-Sheet berhasil diunduh!');
+    const cleanName = periodLabel.replace(/[\s/\\?%*:|"<>]+/g, '_');
+    XLSX.writeFile(wb, `Laporan_HR_Arasa_${cleanName}.xlsx`);
+    notify('Laporan Excel lengkap berhasil diunduh.');
   };
 
-  // Standalone Single-Tab Exporters
-  const exportIzinOnly = () => {
-    if (!filteredIzin.length) return notify('❌ Data Izin kosong.');
-    const data = filteredIzin.map((i, idx) => ({
+  // Unduh khusus satu orang karyawan
+  const downloadRiwayatIndividu = (emp) => {
+    const listIzin = filteredIzin.filter((i) => i.id_karyawan === emp.id_karyawan);
+    const listLembur = filteredLembur.filter((l) => l.id_karyawan === emp.id_karyawan);
+
+    const wb = XLSX.utils.book_new();
+
+    const izinData = listIzin.map((i, idx) => ({
       No: idx + 1,
-      'ID Karyawan': i.id_karyawan,
-      'Nama Karyawan': getNama(i, master),
-      'Rentang Tanggal': formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
-      'Total Hari': daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
+      'Tanggal Izin': formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
+      'Durasi (Hari)': daySpan(i.tanggal_izin_mulai, i.tanggal_izin_akhir),
       Kategori: i.kategori_izin,
-      'Potong Cuti': getHariPotongCuti(i) > 0 ? `${getHariPotongCuti(i)} Hari` : '0 (Tidak)',
+      'Potong Cuti': getHariPotongCuti(i) > 0 ? `Ya (${getHariPotongCuti(i)} Hari)` : 'Tidak',
       Alasan: i.alasan || '-',
       Status: normalizeStatus(i.status),
     }));
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Data Izin');
-    XLSX.writeFile(wb, `Laporan_Izin_Arasa_${periodLabel.replace(/\s+/g, '_')}.xlsx`);
-    notify('Laporan Izin berhasil diunduh!');
-  };
+    const wsIzin = XLSX.utils.json_to_sheet(izinData);
+    XLSX.utils.book_append_sheet(wb, wsIzin, 'Riwayat Izin');
 
-  const exportLemburOnly = () => {
-    if (!filteredLembur.length) return notify('❌ Data Lembur kosong.');
-    const data = filteredLembur.map((l, idx) => ({
+    const lemburData = listLembur.map((l, idx) => ({
       No: idx + 1,
-      'ID Karyawan': l.id_karyawan,
-      'Nama Karyawan': getNama(l, master),
-      'Tanggal Lembur': formatTanggal(l.tanggal_lembur, 'long'),
+      Tanggal: formatTanggal(l.tanggal_lembur, 'long'),
       Waktu: formatRentangJam(l.jam_awal, l.jam_selesai),
-      'Durasi (Jam)': parseFloat(l.durasi) || 0,
-      'Durasi Teks': formatTeksJam(l.durasi),
-      Alasan: l.alasan || '-',
+      'Durasi Jam': parseFloat(l.durasi) || 0,
+      Keterangan: l.alasan || '-',
       Status: normalizeStatus(l.status),
     }));
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, 'Data Lembur');
-    XLSX.writeFile(wb, `Laporan_Lembur_Arasa_${periodLabel.replace(/\s+/g, '_')}.xlsx`);
-    notify('Laporan Lembur berhasil diunduh!');
+    const wsLembur = XLSX.utils.json_to_sheet(lemburData);
+    XLSX.utils.book_append_sheet(wb, wsLembur, 'Riwayat Lembur');
+
+    const cleanName = emp.nama_karyawan.replace(/[\s/\\?%*:|"<>]+/g, '_');
+    XLSX.writeFile(wb, `Riwayat_${cleanName}_${periodLabel.replace(/\s+/g, '_')}.xlsx`);
+    notify(`Laporan ${emp.nama_karyawan} berhasil diunduh.`);
   };
 
-  // Reset filters
-  const resetFilters = () => {
-    setPeriodPreset('ALL');
-    setCustomMonth('ALL');
+  // Reset filter ke kondisi default
+  const handleReset = () => {
+    setPeriod('THIS_MONTH');
     setDeptFilter('ALL');
-    setStatusFilter('ALL_DECIDED');
+    setStatusFilter('DECIDED');
     setSearch('');
     setSortBy('nama_asc');
-    notify('Filter berhasil direset.');
+    setOnlyActiveEmployees(false);
+    notify('Filter dikembalikan ke kondisi awal.');
   };
 
-  // Drilldown records for selected employee in modal
+  // Data drilldown modal
   const drilldownData = useMemo(() => {
     if (!drilldownEmp) return { izin: [], lembur: [] };
     return {
@@ -609,7 +539,7 @@ export default function Rekap() {
   return (
     <div className="rekap-container">
       {/* =========================================================
-         1. Executive Header & Export Action Hub
+         1. Header Eksekutif & 1 Tombol Utama Download Excel
          ========================================================= */}
       <div className="rekap-header-card">
         <div className="rekap-title-wrap">
@@ -617,33 +547,25 @@ export default function Rekap() {
             <FileSpreadsheet size={26} />
           </div>
           <div className="rekap-title-text">
-            <h1>Rekap &amp; Analitik HR</h1>
-            <p>Executive Ledger, Audit Trail, dan Rekapitulasi Multinasional.</p>
+            <h1>Rekapitulasi Kehadiran &amp; Cuti SDM</h1>
+            <p>Monitoring saldo cuti tahunan, akumulasi jam lembur, dan ekspor berkas laporan resmi.</p>
           </div>
         </div>
 
         <div className="rekap-header-actions">
-          <button className="btn-export-sub" onClick={exportIzinOnly} title="Ekspor Log Izin & Cuti">
-            <FileText size={14} />
-            Ekspor Izin
-          </button>
-          <button className="btn-export-sub" onClick={exportLemburOnly} title="Ekspor Log Lembur">
-            <Clock size={14} />
-            Ekspor Lembur
-          </button>
           <button
             className="btn-export-main"
-            onClick={exportEnterpriseMaster}
-            title="Ekspor Seluruh Data ke Excel Multi-Sheet Komprehensif"
+            onClick={downloadLaporanExcel}
+            title="Download seluruh rekap ke file Excel 3 Sheet lengkap"
           >
             <Download size={16} />
-            Download Laporan Lengkap (Excel)
+            Unduh Rekapitulasi Excel
           </button>
         </div>
       </div>
 
       {/* =========================================================
-         2. Executive KPI Ribbon (4 Metric Cards)
+         2. Ringkasan Eksekutif SDM (4 Kartu Metrik Jelas)
          ========================================================= */}
       <div className="rekap-kpi-grid">
         <div className="rekap-kpi-card">
@@ -651,11 +573,9 @@ export default function Rekap() {
             <Clock size={22} />
           </div>
           <div className="rekap-kpi-info">
-            <span className="rekap-kpi-label">Jam Lembur Disetujui</span>
-            <span className="rekap-kpi-value">{kpiData.jamLemburApproved} Jam</span>
-            <span className="rekap-kpi-sub">
-              {kpiData.jamLemburRejected > 0 ? `${kpiData.jamLemburRejected} jam ditolak` : '0 jam ditolak'}
-            </span>
+            <span className="rekap-kpi-label">Akumulasi Jam Lembur</span>
+            <span className="rekap-kpi-value">{summaryKPI.jamLemburApproved} Jam</span>
+            <span className="rekap-kpi-sub">{summaryKPI.sesiLembur} sesi disetujui</span>
           </div>
         </div>
 
@@ -664,23 +584,10 @@ export default function Rekap() {
             <Calendar size={22} />
           </div>
           <div className="rekap-kpi-info">
-            <span className="rekap-kpi-label">Cuti &amp; Izin Terpakai</span>
-            <span className="rekap-kpi-value">{kpiData.hariCutiTerpotong} Hari</span>
+            <span className="rekap-kpi-label">Penggunaan Cuti Tahunan</span>
+            <span className="rekap-kpi-value">{summaryKPI.hariCutiDipotong} Hari</span>
             <span className="rekap-kpi-sub">
-              {kpiData.hariIzinLainnya > 0 ? `+${kpiData.hariIzinLainnya} hari izin non-potong` : 'Jatah cuti tahunan'}
-            </span>
-          </div>
-        </div>
-
-        <div className="rekap-kpi-card">
-          <div className="rekap-kpi-icon-bubble amber">
-            <CheckCircle2 size={22} />
-          </div>
-          <div className="rekap-kpi-info">
-            <span className="rekap-kpi-label">Approval Rate</span>
-            <span className="rekap-kpi-value">{kpiData.approvalRate}%</span>
-            <span className="rekap-kpi-sub">
-              {kpiData.totalApproved} ACC dari {kpiData.totalDecided} diproses
+              {summaryKPI.hariIzinLain > 0 ? `+${summaryKPI.hariIzinLain} hari izin non-potong cuti` : 'Dipotong dari jatah tahunan'}
             </span>
           </div>
         </div>
@@ -690,149 +597,118 @@ export default function Rekap() {
             <Users size={22} />
           </div>
           <div className="rekap-kpi-info">
-            <span className="rekap-kpi-label">Partisipasi Karyawan</span>
+            <span className="rekap-kpi-label">Karyawan Aktif Periode Ini</span>
             <span className="rekap-kpi-value">
-              {kpiData.activeHeadcount} / {master.length}
+              {summaryKPI.activeCount} / {master.length} Orang
             </span>
-            <span className="rekap-kpi-sub">
-              {master.length > 0
-                ? `${((kpiData.activeHeadcount / master.length) * 100).toFixed(0)}% karyawan aktif mengajukan`
-                : '-'}
-            </span>
+            <span className="rekap-kpi-sub">Memiliki pengajuan lembur atau cuti</span>
+          </div>
+        </div>
+
+        <div className="rekap-kpi-card">
+          <div className="rekap-kpi-icon-bubble amber">
+            <CheckCircle2 size={22} />
+          </div>
+          <div className="rekap-kpi-info">
+            <span className="rekap-kpi-label">Tingkat Persetujuan (Approval Rate)</span>
+            <span className="rekap-kpi-value">{summaryKPI.approvalRate}%</span>
+            <span className="rekap-kpi-sub">Rasio persetujuan pengajuan HR</span>
           </div>
         </div>
       </div>
 
       {/* =========================================================
-         3. Smart Multinational Filter Panel
+         3. Panel Filter Data (Praktis & Terstruktur)
          ========================================================= */}
       <div className="rekap-filter-panel">
-        {/* Preset quick filter row */}
-        <div className="rekap-preset-row">
-          <div className="rekap-presets">
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginRight: 4 }}>
-              Periode:
-            </span>
-            <button
-              className={`preset-chip ${periodPreset === 'ALL' ? 'active' : ''}`}
-              onClick={() => setPeriodPreset('ALL')}
-            >
-              Semua Waktu
-            </button>
-            <button
-              className={`preset-chip ${periodPreset === 'THIS_MONTH' ? 'active' : ''}`}
-              onClick={() => setPeriodPreset('THIS_MONTH')}
-            >
-              Bulan Ini
-            </button>
-            <button
-              className={`preset-chip ${periodPreset === 'LAST_MONTH' ? 'active' : ''}`}
-              onClick={() => setPeriodPreset('LAST_MONTH')}
-            >
-              Bulan Lalu
-            </button>
-            <button
-              className={`preset-chip ${periodPreset === 'THIS_YEAR' ? 'active' : ''}`}
-              onClick={() => setPeriodPreset('THIS_YEAR')}
-            >
-              Tahun Ini (YTD)
-            </button>
-            <button
-              className={`preset-chip ${periodPreset === 'CUSTOM' ? 'active' : ''}`}
-              onClick={() => setPeriodPreset('CUSTOM')}
-            >
-              Kustom Bulan
-            </button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: 'var(--text-main)' }}>
+            <Calendar size={16} color="var(--primary)" />
+            <span>Periode Data: <strong style={{ color: 'var(--primary)' }}>{periodLabel}</strong></span>
           </div>
 
-          <div className="rekap-period-label">
-            <Calendar size={13} />
-            {periodLabel}
-          </div>
+          <button className="filter-reset-btn" onClick={handleReset} title="Kembali ke default Bulan Ini">
+            <RotateCcw size={13} />
+            Reset Filter
+          </button>
         </div>
 
-        {/* Filter controls row */}
         <div className="rekap-controls-row">
-          {/* Search */}
+          {/* 1. Periode Dropdown */}
+          <select
+            className="filter-select"
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+          >
+            <option value="THIS_MONTH">Bulan Ini ({thisMonthString})</option>
+            <option value="LAST_MONTH">Bulan Lalu ({lastMonthString})</option>
+            {availableMonths.map((m) => (
+              <option key={m} value={m}>
+                Bulan: {m}
+              </option>
+            ))}
+            <option value="THIS_YEAR">Tahun Ini ({curYear})</option>
+            <option value="ALL">Semua Periode</option>
+          </select>
+
+          {/* 2. Divisi Dropdown */}
+          <select
+            className="filter-select"
+            value={deptFilter}
+            onChange={(e) => setDeptFilter(e.target.value)}
+          >
+            <option value="ALL">Semua Divisi ({departments.length})</option>
+            {departments.map((d) => (
+              <option key={d} value={d}>
+                Divisi: {d}
+              </option>
+            ))}
+          </select>
+
+          {/* 3. Status Dropdown */}
+          <select
+            className="filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="DECIDED">Selesai (Disetujui &amp; Ditolak)</option>
+            <option value="APPROVED">Hanya yang Disetujui (ACC)</option>
+            <option value="REJECTED">Hanya yang Ditolak</option>
+            <option value="ALL">Semua Status (+ Menunggu)</option>
+          </select>
+
+          {/* 4. Cari Nama Karyawan */}
           <div className="filter-input-wrap">
-            <Search size={16} className="filter-icon-left" />
+            <Search size={15} className="filter-icon-left" />
             <input
               type="text"
               className="filter-input"
-              placeholder="Cari nama karyawan, ID, departemen, alasan..."
+              placeholder="Cari nama atau ID karyawan..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-
-          {/* Custom Month Dropdown (shown or enabled if CUSTOM is active) */}
-          {periodPreset === 'CUSTOM' ? (
-            <select
-              className="filter-select"
-              value={customMonth}
-              onChange={(e) => setCustomMonth(e.target.value)}
-            >
-              <option value="ALL">Pilih Bulan...</option>
-              {availableMonths.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          ) : (
-            /* Department Filter */
-            <select
-              className="filter-select"
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-            >
-              <option value="ALL">Semua Departemen ({departments.length})</option>
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* Department Filter (if custom month is active, place here) */}
-          {periodPreset === 'CUSTOM' ? (
-            <select
-              className="filter-select"
-              value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-            >
-              <option value="ALL">Semua Departemen</option>
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          ) : (
-            /* Status Filter */
-            <select
-              className="filter-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="ALL_DECIDED">Selesai (ACC &amp; Reject)</option>
-              <option value="APPROVED">Hanya Disetujui (Approved)</option>
-              <option value="REJECTED">Hanya Ditolak (Rejected)</option>
-              <option value="ALL">Semua (+ Termasuk Pending)</option>
-            </select>
-          )}
-
-          {/* Reset button */}
-          <button className="filter-reset-btn" onClick={resetFilters} title="Reset Semua Filter">
-            <RotateCcw size={13} />
-            Reset
-          </button>
         </div>
       </div>
 
       {/* =========================================================
-         4. View Segmented Tabs & Active Results Bar
+         4. Navigasi Tab Data
          ========================================================= */}
       <div className="rekap-tabs-bar">
         <div className="rekap-segmented">
@@ -840,17 +716,17 @@ export default function Rekap() {
             className={`rekap-tab-btn ${activeTab === 'karyawan' ? 'active' : ''}`}
             onClick={() => setActiveTab('karyawan')}
           >
-            <Users size={14} />
-            Rangkuman Karyawan
-            <span className="rekap-tab-count">{karyawanRollup.length}</span>
+            <Users size={15} />
+            Rekap Saldo &amp; Lembur
+            <span className="rekap-tab-count">{employeeList.length}</span>
           </button>
 
           <button
             className={`rekap-tab-btn ${activeTab === 'izin' ? 'active' : ''}`}
             onClick={() => setActiveTab('izin')}
           >
-            <Calendar size={14} />
-            Log Izin &amp; Cuti
+            <Calendar size={15} />
+            Riwayat Izin &amp; Cuti
             <span className="rekap-tab-count">{filteredIzin.length}</span>
           </button>
 
@@ -858,42 +734,54 @@ export default function Rekap() {
             className={`rekap-tab-btn ${activeTab === 'lembur' ? 'active' : ''}`}
             onClick={() => setActiveTab('lembur')}
           >
-            <Clock size={14} />
-            Log Lembur
+            <Clock size={15} />
+            Riwayat Lembur
             <span className="rekap-tab-count">{filteredLembur.length}</span>
-          </button>
-
-          <button
-            className={`rekap-tab-btn ${activeTab === 'analitik' ? 'active' : ''}`}
-            onClick={() => setActiveTab('analitik')}
-          >
-            <BarChart3 size={14} />
-            Distribusi Departemen
           </button>
         </div>
 
-        {/* Sort selector for employee view */}
+        {/* Kontrol Tambahan Khusus Tab Karyawan */}
         {activeTab === 'karyawan' && (
-          <div className="rekap-active-meta">
-            <ArrowUpDown size={14} />
-            <span>Urutkan:</span>
-            <select
-              className="rekap-sort-select"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {/* Toggle Hanya yang Ada Pengajuan */}
+            <button
+              type="button"
+              className={`preset-chip ${onlyActiveEmployees ? 'active' : ''}`}
+              onClick={() => setOnlyActiveEmployees(!onlyActiveEmployees)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              <option value="nama_asc">Nama (A - Z)</option>
-              <option value="nama_desc">Nama (Z - A)</option>
-              <option value="lembur_desc">Jam Lembur Terbanyak</option>
-              <option value="sisa_cuti_asc">Sisa Cuti Terendah</option>
-              <option value="dept">Departemen</option>
-            </select>
+              <UserCheck size={13} />
+              {onlyActiveEmployees ? 'Hanya Karyawan Beraktivitas' : 'Tampilkan Semua Karyawan'}
+            </button>
+
+            {/* Urutan 2 Seksi: By Data dan By Time */}
+            <div className="rekap-active-meta">
+              <ArrowUpDown size={13} />
+              <select
+                className="rekap-sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <optgroup label="Berdasarkan Data (Metrik)">
+                  <option value="nama_asc">Nama Karyawan (A - Z)</option>
+                  <option value="nama_desc">Nama Karyawan (Z - A)</option>
+                  <option value="lembur_desc">Akumulasi Lembur Terbanyak</option>
+                  <option value="sisa_cuti_asc">Sisa Cuti Tersedikit</option>
+                  <option value="dept">Berdasarkan Divisi</option>
+                </optgroup>
+                <optgroup label="Berdasarkan Waktu (Kronologi)">
+                  <option value="time_latest">Aktivitas / Pengajuan Terbaru</option>
+                  <option value="time_oldest">Aktivitas / Pengajuan Terlama</option>
+                  <option value="join_latest">Tanggal Bergabung Terbaru</option>
+                </optgroup>
+              </select>
+            </div>
           </div>
         )}
       </div>
 
       {/* =========================================================
-         5. VIEW 1: RANGKUMAN KARYAWAN (Rollup Ledger)
+         5. TAB 1: REKAP SALDO CUTI & LEMBUR KARYAWAN
          ========================================================= */}
       {activeTab === 'karyawan' && (
         <>
@@ -904,24 +792,22 @@ export default function Rekap() {
                 <thead>
                   <tr>
                     <th>Karyawan</th>
-                    <th>Departemen</th>
-                    <th>Jatah Cuti</th>
-                    <th>Cuti Dipakai (Periode)</th>
-                    <th>Sisa Saldo Cuti</th>
-                    <th>Jam Lembur (ACC)</th>
-                    <th>Lembur Ditolak</th>
+                    <th>Divisi</th>
+                    <th>Saldo Cuti Tahunan</th>
+                    <th>Cuti Dipakai ({period === 'THIS_MONTH' ? 'Bulan Ini' : 'Periode Ini'})</th>
+                    <th>Total Jam Lembur (ACC)</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {karyawanRollup.length === 0 ? (
+                  {employeeList.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '36px 16px', color: '#94a3b8' }}>
-                        Tidak ada data karyawan yang cocok dengan filter aktif.
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '36px 16px', color: '#94a3b8' }}>
+                        Tidak ada data karyawan yang cocok dengan kriteria filter saat ini.
                       </td>
                     </tr>
                   ) : (
-                    karyawanRollup.map((emp) => {
+                    employeeList.map((emp) => {
                       const initials = emp.nama_karyawan
                         .split(' ')
                         .map((n) => n[0])
@@ -929,8 +815,9 @@ export default function Rekap() {
                         .join('')
                         .toUpperCase();
 
-                      const isLowBalance = emp.sisaCuti <= 3;
-                      const isZeroBalance = emp.sisaCuti === 0;
+                      const isZero = emp.sisaCuti === 0;
+                      const isLow = emp.sisaCuti > 0 && emp.sisaCuti <= 3;
+                      const shouldShowAction = emp.hasActivity || isZero;
 
                       return (
                         <tr key={emp.id_karyawan}>
@@ -950,52 +837,44 @@ export default function Rekap() {
                             </span>
                           </td>
                           <td>
-                            <strong>{emp.jatahAwal}</strong> Hari
+                            <span className={`balance-pill ${isZero ? 'danger' : isLow ? 'warning' : 'safe'}`}>
+                              Sisa {emp.sisaCuti} dari {emp.jatahAwal} Hari
+                            </span>
                           </td>
                           <td>
-                            <span style={{ fontWeight: 600, color: emp.hariCutiTerpotongPeriod > 0 ? 'var(--primary)' : 'inherit' }}>
-                              {emp.hariCutiTerpotongPeriod} Hari
-                            </span>
-                            {emp.hariIzinLainPeriod > 0 && (
+                            <strong style={{ color: emp.cutiPeriodeIni > 0 ? 'var(--primary)' : 'inherit' }}>
+                              {emp.cutiPeriodeIni} Hari
+                            </strong>
+                            {emp.izinLainPeriodeIni > 0 && (
                               <span style={{ fontSize: 11, color: '#64748b', display: 'block' }}>
-                                (+{emp.hariIzinLainPeriod} izin non-potong)
+                                (+{emp.izinLainPeriodeIni} izin tanpa potong cuti)
                               </span>
                             )}
                           </td>
                           <td>
-                            <span
-                              className={`balance-pill ${
-                                isZeroBalance ? 'danger' : isLowBalance ? 'warning' : 'safe'
-                              }`}
-                            >
-                              {emp.sisaCuti} Hari Sisa
-                            </span>
-                          </td>
-                          <td>
-                            <strong style={{ color: emp.jamLemburAcc > 0 ? '#059669' : 'inherit' }}>
+                            <strong style={{ color: emp.jamLemburAcc > 0 ? '#059669' : '#64748b' }}>
                               {emp.jamLemburAcc} Jam
                             </strong>
                             <span style={{ fontSize: 11, color: '#64748b', display: 'block' }}>
-                              {emp.countLembur} sesi
+                              {emp.sesiLembur} sesi lembur
                             </span>
                           </td>
                           <td>
-                            <span style={{ color: emp.jamLemburRej > 0 ? '#dc2626' : '#94a3b8' }}>
-                              {emp.jamLemburRej} Jam
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              className="btn-table-action"
-                              onClick={() => {
-                                setDrilldownEmp(emp);
-                                setDrilldownSubTab('izin');
-                              }}
-                              title="Lihat Rincian Audit Trail Karyawan Ini"
-                            >
-                              <Eye size={12} />
-                              Detail
-                            </button>
+                            {shouldShowAction ? (
+                              <button
+                                className="btn-table-action"
+                                onClick={() => {
+                                  setDrilldownEmp(emp);
+                                  setDrilldownSubTab('izin');
+                                }}
+                                title="Lihat rincian riwayat izin dan lembur"
+                              >
+                                <Eye size={12} />
+                                Lihat Rincian
+                              </button>
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: 14, userSelect: 'none' }}>—</span>
+                            )}
                           </td>
                         </tr>
                       );
@@ -1008,16 +887,20 @@ export default function Rekap() {
 
           {/* Mobile Card List */}
           <div className="rekap-mobile-cards">
-            {karyawanRollup.length === 0 ? (
-              <div className="empty">Tidak ada data karyawan yang cocok.</div>
+            {employeeList.length === 0 ? (
+              <div className="empty">Tidak ada data karyawan yang cocok dengan kriteria filter.</div>
             ) : (
-              karyawanRollup.map((emp) => {
+              employeeList.map((emp) => {
                 const initials = emp.nama_karyawan
                   .split(' ')
                   .map((n) => n[0])
                   .slice(0, 2)
                   .join('')
                   .toUpperCase();
+
+                const isZero = emp.sisaCuti === 0;
+                const isLow = emp.sisaCuti > 0 && emp.sisaCuti <= 3;
+                const shouldShowAction = emp.hasActivity || isZero;
 
                 return (
                   <div className="rekap-card-item" key={emp.id_karyawan}>
@@ -1031,16 +914,18 @@ export default function Rekap() {
                           </div>
                         </div>
                       </div>
-                      <span className="balance-pill safe">{emp.sisaCuti} Sisa Cuti</span>
+                      <span className={`balance-pill ${isZero ? 'danger' : isLow ? 'warning' : 'safe'}`}>
+                        Sisa {emp.sisaCuti} Hari
+                      </span>
                     </div>
 
                     <div className="rekap-card-stats-grid">
                       <div className="rekap-card-stat">
                         <span className="rekap-card-stat-label">Cuti Dipakai</span>
-                        <span className="rekap-card-stat-val">{emp.hariCutiTerpotongPeriod} Hari</span>
+                        <span className="rekap-card-stat-val">{emp.cutiPeriodeIni} Hari</span>
                       </div>
                       <div className="rekap-card-stat">
-                        <span className="rekap-card-stat-label">Jam Lembur (ACC)</span>
+                        <span className="rekap-card-stat-label">Lembur Disetujui</span>
                         <span className="rekap-card-stat-val" style={{ color: '#059669' }}>
                           {emp.jamLemburAcc} Jam
                         </span>
@@ -1048,17 +933,21 @@ export default function Rekap() {
                     </div>
 
                     <div className="rekap-card-footer">
-                      <span>{emp.countIzin} Pengajuan Izin · {emp.countLembur} Sesi Lembur</span>
-                      <button
-                        className="btn-table-action"
-                        onClick={() => {
-                          setDrilldownEmp(emp);
-                          setDrilldownSubTab('izin');
-                        }}
-                      >
-                        <Eye size={12} />
-                        Detail Audit
-                      </button>
+                      <span>{emp.totalPengajuan > 0 ? `${emp.totalPengajuan} Pengajuan` : 'Tidak ada pengajuan'}</span>
+                      {shouldShowAction ? (
+                        <button
+                          className="btn-table-action"
+                          onClick={() => {
+                            setDrilldownEmp(emp);
+                            setDrilldownSubTab('izin');
+                          }}
+                        >
+                          <Eye size={12} />
+                          Lihat Rincian
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: 12, color: '#94a3b8' }}>—</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -1069,23 +958,22 @@ export default function Rekap() {
       )}
 
       {/* =========================================================
-         6. VIEW 2: LOG DETAIL IZIN & CUTI (Granular Audit Trail)
+         6. TAB 2: RIWAYAT IZIN & CUTI
          ========================================================= */}
       {activeTab === 'izin' && (
         <>
-          {/* Desktop Table */}
           <div className="rekap-table-card">
             <div className="rekap-table-wrapper">
               <table className="rekap-table">
                 <thead>
                   <tr>
                     <th>Karyawan</th>
-                    <th>Departemen</th>
+                    <th>Divisi</th>
                     <th>Tanggal Izin</th>
                     <th>Durasi</th>
                     <th>Kategori</th>
-                    <th>Status Potong Cuti</th>
-                    <th>Alasan</th>
+                    <th>Ketentuan Saldo Cuti</th>
+                    <th>Alasan Pengajuan</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -1093,7 +981,7 @@ export default function Rekap() {
                   {filteredIzin.length === 0 ? (
                     <tr>
                       <td colSpan={8} style={{ textAlign: 'center', padding: '36px 16px', color: '#94a3b8' }}>
-                        Tidak ada catatan izin yang sesuai filter.
+                        Tidak ada riwayat izin pada periode ini.
                       </td>
                     </tr>
                   ) : (
@@ -1114,7 +1002,7 @@ export default function Rekap() {
                             <span className="dept-badge">{emp?.departemen || 'Umum'}</span>
                           </td>
                           <td>
-                            <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>
+                            <span style={{ fontWeight: 700 }}>
                               {formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir)}
                             </span>
                           </td>
@@ -1126,7 +1014,7 @@ export default function Rekap() {
                           </td>
                           <td>
                             {potong > 0 ? (
-                              <span className="potong-chip ya">✂️ Potong {potong} Hari</span>
+                              <span className="potong-chip ya">Potong {potong} Hari Cuti</span>
                             ) : (
                               <span className="potong-chip tidak">Tanpa Potong Cuti</span>
                             )}
@@ -1149,7 +1037,7 @@ export default function Rekap() {
           {/* Mobile Card List */}
           <div className="rekap-mobile-cards">
             {filteredIzin.length === 0 ? (
-              <div className="empty">Tidak ada catatan izin.</div>
+              <div className="empty">Tidak ada riwayat izin pada periode ini.</div>
             ) : (
               filteredIzin.map((i) => {
                 const emp = master.find((m) => m.id_karyawan === i.id_karyawan);
@@ -1170,7 +1058,7 @@ export default function Rekap() {
 
                     <div className="rekap-card-stats-grid">
                       <div className="rekap-card-stat">
-                        <span className="rekap-card-stat-label">Rentang Waktu</span>
+                        <span className="rekap-card-stat-label">Tanggal Izin</span>
                         <span className="rekap-card-stat-val" style={{ fontSize: 12 }}>
                           {formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir)}
                         </span>
@@ -1185,9 +1073,9 @@ export default function Rekap() {
 
                     <div className="rekap-card-footer">
                       {potong > 0 ? (
-                        <span className="potong-chip ya">✂️ Potong {potong} Hari</span>
+                        <span className="potong-chip ya">Potong {potong} Hari</span>
                       ) : (
-                        <span className="potong-chip tidak">Tanpa Potong Cuti</span>
+                        <span className="potong-chip tidak">Tanpa Potong</span>
                       )}
                       <span style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {i.alasan || '-'}
@@ -1202,22 +1090,20 @@ export default function Rekap() {
       )}
 
       {/* =========================================================
-         7. VIEW 3: LOG DETAIL LEMBUR (Granular Overtime Trail)
+         7. TAB 3: RIWAYAT LEMBUR
          ========================================================= */}
       {activeTab === 'lembur' && (
         <>
-          {/* Desktop Table */}
           <div className="rekap-table-card">
             <div className="rekap-table-wrapper">
               <table className="rekap-table">
                 <thead>
                   <tr>
                     <th>Karyawan</th>
-                    <th>Departemen</th>
+                    <th>Divisi</th>
                     <th>Tanggal Lembur</th>
-                    <th>Jam Awal - Selesai</th>
+                    <th>Jam Mulai - Selesai</th>
                     <th>Durasi Lembur</th>
-                    <th>Bulan Rekap</th>
                     <th>Alasan / Pekerjaan</th>
                     <th>Status</th>
                   </tr>
@@ -1225,8 +1111,8 @@ export default function Rekap() {
                 <tbody>
                   {filteredLembur.length === 0 ? (
                     <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', padding: '36px 16px', color: '#94a3b8' }}>
-                        Tidak ada catatan lembur yang sesuai filter.
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '36px 16px', color: '#94a3b8' }}>
+                        Tidak ada riwayat lembur pada periode ini.
                       </td>
                     </tr>
                   ) : (
@@ -1259,12 +1145,7 @@ export default function Rekap() {
                               ({formatTeksJam(l.durasi)})
                             </span>
                           </td>
-                          <td>
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                              {l.bulan_lembur || '-'}
-                            </span>
-                          </td>
-                          <td style={{ maxWidth: 220, fontSize: 12, color: 'var(--text-muted)' }}>
+                          <td style={{ maxWidth: 240, fontSize: 12, color: 'var(--text-muted)' }}>
                             {l.alasan || '-'}
                           </td>
                           <td>
@@ -1282,7 +1163,7 @@ export default function Rekap() {
           {/* Mobile Card List */}
           <div className="rekap-mobile-cards">
             {filteredLembur.length === 0 ? (
-              <div className="empty">Tidak ada catatan lembur.</div>
+              <div className="empty">Tidak ada riwayat lembur pada periode ini.</div>
             ) : (
               filteredLembur.map((l) => {
                 const emp = master.find((m) => m.id_karyawan === l.id_karyawan);
@@ -1314,8 +1195,7 @@ export default function Rekap() {
                     </div>
 
                     <div className="rekap-card-footer">
-                      <span>Bulan: {l.bulan_lembur || '-'}</span>
-                      <span style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 11, color: '#64748b', fontStyle: 'italic', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {l.alasan || '-'}
                       </span>
                     </div>
@@ -1328,94 +1208,15 @@ export default function Rekap() {
       )}
 
       {/* =========================================================
-         8. VIEW 4: DISTRIBUSI DEPARTEMEN & ANALYTICS WIDGET
-         ========================================================= */}
-      {activeTab === 'analitik' && (
-        <div className="rekap-analytics-grid">
-          {/* Overtime Ranking */}
-          <div className="analytics-widget-card">
-            <div className="analytics-widget-head">
-              <span className="analytics-widget-title">
-                <Clock size={16} color="var(--primary)" />
-                Beban Jam Lembur per Departemen
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>
-                Total: {kpiData.jamLemburApproved} Jam
-              </span>
-            </div>
-
-            <div className="dept-rank-list">
-              {departmentAnalytics.list
-                .sort((a, b) => b.jamLembur - a.jamLembur)
-                .map((d) => {
-                  const pct = Math.round((d.jamLembur / departmentAnalytics.maxLembur) * 100);
-                  return (
-                    <div className="dept-rank-item" key={d.dept}>
-                      <div className="dept-rank-label-row">
-                        <span className="dept-rank-name">{d.dept}</span>
-                        <span className="dept-rank-val">{Math.round(d.jamLembur * 10) / 10} Jam</span>
-                      </div>
-                      <div className="dept-rank-bar-bg">
-                        <div className="dept-rank-bar-fill" style={{ width: `${Math.max(pct, 4)}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Leave Ranking */}
-          <div className="analytics-widget-card">
-            <div className="analytics-widget-head">
-              <span className="analytics-widget-title">
-                <Calendar size={16} color="#059669" />
-                Penggunaan Cuti Tahunan per Departemen
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>
-                Total: {kpiData.hariCutiTerpotong} Hari
-              </span>
-            </div>
-
-            <div className="dept-rank-list">
-              {departmentAnalytics.list
-                .sort((a, b) => b.hariCuti - a.hariCuti)
-                .map((d) => {
-                  const pct = Math.round((d.hariCuti / departmentAnalytics.maxCuti) * 100);
-                  return (
-                    <div className="dept-rank-item" key={d.dept}>
-                      <div className="dept-rank-label-row">
-                        <span className="dept-rank-name">{d.dept}</span>
-                        <span className="dept-rank-val" style={{ color: '#059669' }}>
-                          {d.hariCuti} Hari
-                        </span>
-                      </div>
-                      <div className="dept-rank-bar-bg">
-                        <div
-                          className="dept-rank-bar-fill"
-                          style={{
-                            width: `${Math.max(pct, 4)}%`,
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================
-         9. EMPLOYEE DRILLDOWN MODAL (Audit Trail Deep-Dive)
+         8. MODAL DETAIL RIWAYAT KARYAWAN (Rapi & Profesional)
          ========================================================= */}
       {drilldownEmp && (
         <Modal
-          maxWidth="760px"
+          maxWidth="720px"
           onClose={() => setDrilldownEmp(null)}
           className="drilldown-modal-box"
         >
-          {/* Header */}
+          {/* Header Profil */}
           <div className="drilldown-hero">
             <div className="drilldown-hero-left">
               <div className="drilldown-avatar">
@@ -1429,27 +1230,30 @@ export default function Rekap() {
               <div className="drilldown-hero-title">
                 <h4>{drilldownEmp.nama_karyawan}</h4>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  #{drilldownEmp.id_karyawan} · {drilldownEmp.departemen} · {drilldownEmp.jabatan}
+                  #{drilldownEmp.id_karyawan} · Divisi {drilldownEmp.departemen} · {drilldownEmp.jabatan}
                 </div>
               </div>
             </div>
 
-            <span className="balance-pill safe" style={{ fontSize: 12, padding: '5px 12px' }}>
-              Saldo Cuti: {drilldownEmp.sisaCuti} / {drilldownEmp.jatahAwal} Hari
-            </span>
+            {/* Kotak Saldo Cuti */}
+            <div style={{ background: '#ffffff', padding: '8px 14px', borderRadius: 12, border: '1px solid #ddd6fe', textAlign: 'right' }}>
+              <span style={{ fontSize: 10, textTransform: 'uppercase', color: '#64748b', fontWeight: 700, display: 'block' }}>
+                Sisa Saldo Cuti Tahunan
+              </span>
+              <strong style={{ fontSize: 16, color: 'var(--primary)' }}>
+                {drilldownEmp.sisaCuti} Hari
+              </strong>
+              <span style={{ fontSize: 11, color: '#64748b' }}> / {drilldownEmp.jatahAwal} Hari</span>
+            </div>
           </div>
 
-          {/* Quick Metrics in Period */}
+          {/* Ringkasan pada Periode Aktif */}
           <div className="drilldown-stats-grid">
             <div className="drilldown-stat-card">
-              <span className="drilldown-stat-label">Cuti Dipotong (Periode)</span>
+              <span className="drilldown-stat-label">Cuti Terpakai ({periodLabel})</span>
               <span className="drilldown-stat-val" style={{ color: 'var(--primary)' }}>
-                {drilldownEmp.hariCutiTerpotongPeriod} Hari
+                {drilldownEmp.cutiPeriodeIni} Hari
               </span>
-            </div>
-            <div className="drilldown-stat-card">
-              <span className="drilldown-stat-label">Izin Non-Potong</span>
-              <span className="drilldown-stat-val">{drilldownEmp.hariIzinLainPeriod} Hari</span>
             </div>
             <div className="drilldown-stat-card">
               <span className="drilldown-stat-label">Lembur Disetujui</span>
@@ -1457,9 +1261,13 @@ export default function Rekap() {
                 {drilldownEmp.jamLemburAcc} Jam
               </span>
             </div>
+            <div className="drilldown-stat-card">
+              <span className="drilldown-stat-label">Izin Non-Potong Cuti</span>
+              <span className="drilldown-stat-val">{drilldownEmp.izinLainPeriodeIni} Hari</span>
+            </div>
           </div>
 
-          {/* Internal Tabs */}
+          {/* Tab Sub Riwayat */}
           <div className="rekap-segmented" style={{ marginBottom: 14 }}>
             <button
               className={`rekap-tab-btn ${drilldownSubTab === 'izin' ? 'active' : ''}`}
@@ -1477,8 +1285,8 @@ export default function Rekap() {
             </button>
           </div>
 
-          {/* Tab Content */}
-          <div style={{ maxHeight: '360px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Isi Riwayat */}
+          <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {drilldownSubTab === 'izin' ? (
               drilldownData.izin.length === 0 ? (
                 <div className="empty">Tidak ada riwayat izin untuk karyawan ini pada periode aktif.</div>
@@ -1492,16 +1300,16 @@ export default function Rekap() {
                         <div>
                           <strong>{formatRentangTanggal(i.tanggal_izin_mulai, i.tanggal_izin_akhir, 'long')}</strong>
                           <span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>
-                            {durasi} Hari · Kategori: {i.kategori_izin}
+                            Durasi: {durasi} Hari · Kategori: {i.kategori_izin}
                           </span>
                         </div>
                         <StatusBadge status={i.status} />
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)', background: '#f8fafc', padding: '6px 10px', borderRadius: 8 }}>
-                        {i.alasan || '-'}
+                        Alasan: {i.alasan || '-'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>
-                        {potong > 0 ? `✂️ Memotong ${potong} Hari Jatah Cuti` : 'ℹ️ Tidak Memotong Jatah Cuti'}
+                      <div style={{ fontSize: 11, color: potong > 0 ? 'var(--primary)' : '#64748b', fontWeight: 600 }}>
+                        {potong > 0 ? `Memotong ${potong} Hari Saldo Cuti` : 'Tanpa Potong Cuti'}
                       </div>
                     </div>
                   );
@@ -1516,17 +1324,36 @@ export default function Rekap() {
                     <div>
                       <strong>{formatTanggal(l.tanggal_lembur, 'long')}</strong>
                       <span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>
-                        {formatRentangJam(l.jam_awal, l.jam_selesai)} · {formatTeksJam(l.durasi)} ({parseFloat(l.durasi) || 0} Jam)
+                        Waktu: {formatRentangJam(l.jam_awal, l.jam_selesai)} · Durasi: {formatTeksJam(l.durasi)} ({parseFloat(l.durasi) || 0} Jam)
                       </span>
                     </div>
                     <StatusBadge status={l.status} />
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', background: '#f8fafc', padding: '6px 10px', borderRadius: 8 }}>
-                    {l.alasan || '-'}
+                    Pekerjaan: {l.alasan || '-'}
                   </div>
                 </div>
               ))
             )}
+          </div>
+
+          {/* Tombol Aksi Bawah Modal */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, paddingTop: 14, borderTop: '1px solid #f1f5f9' }}>
+            <button
+              type="button"
+              className="btn-export-sub"
+              onClick={() => downloadRiwayatIndividu(drilldownEmp)}
+            >
+              <Download size={13} />
+              Unduh Riwayat ({drilldownEmp.nama_karyawan})
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={() => setDrilldownEmp(null)}
+            >
+              Tutup
+            </button>
           </div>
         </Modal>
       )}
